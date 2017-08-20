@@ -1,0 +1,21 @@
+{
+  "name": "kpi",
+  "version": "1.0.0",
+  "description": "KPI Service",
+  "main": "app.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "/home/eduardo/gogs-repositories/eduardo/kpi.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.15.4"
+  }
+}
