@@ -1,4 +1,4 @@
-var mRoutes = require('./controllers/routes.js');
+var iroutes = require('./controllers/routes.js');
 var mController = require('./controllers/icontroller.js');
 var path = require('path');
 var express = require('express');
@@ -6,11 +6,11 @@ var express = require('express');
 global.appRoot = path.resolve(__dirname);
 var app = express();
 
-var rota = new mController.RotaController(app);
-var routes = new mRoutes.RoutesController();
+var routes = iroutes.getRoutesObject(app);
 
-routes.addController(rota);
-routes.applyRoutes();
+routes.apply();
 
 app.use(express.static('public'));
 app.listen(8080);
+
+exports.app = app;
