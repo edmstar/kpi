@@ -100,11 +100,7 @@ class AuthenticationController extends controller.IController
 
     applyRoutes()
     {
-        this.app.all("*", function(req, res)
-        {
-            res.status(200);
-            res.send("Oi");
-        });
+
     }
 }
 
