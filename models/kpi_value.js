@@ -20,4 +20,11 @@ const KPI_VALUE = sequelize.define('KPI_VALUE', {
     }
 });
 
+KPI_VALUE.sync();
+
+KPI.prototype.getValues = function(start, end, callback)
+{
+    KPI_VALUE.load({ where: { kpi: this, date: { $between: [start, end] } } }).catch().then(callback);
+}
+
 module.exports = KPI_VALUE;

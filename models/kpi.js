@@ -1,6 +1,5 @@
 var Sequelize = require('sequelize');
 var sequelize = require('./models.js');
-var KPI_VALUE = require('./kpi_value.js');
 
 var frequencyTypes = ['year', 'semester', 'month', 'week', 'day', 'hour', 'minute', 'second'];
 var consolidationTypes = ['mean', 'weighted', 'sum', 'min', 'max', 'formula'];
@@ -29,14 +28,8 @@ const KPI = sequelize.define('KPI', {
     target: { type: Sequelize.DOUBLE, allowNull: true, defaultValue: null }
 });
 
-KPI.hasOne(KPI, { as: 'parent', foreignKey: 'targetKpi', field: 'target_kpi', allowNull: true, defaultValue: null } );
-
-KPI.prototype.getValues = function(start, end, callback)
-{
-    KPI_VALUE.load({ where: { kpi: this, date: { $between: [start, end] } } }).catch().then(callback);
-}
+KPI.hasOne(KPI, { as: 'Target', foreignKey: 'target_kpi', allowNull: true, defaultValue: null } );
 
 KPI.sync();
-KPI_VALUE.sync();
 
 module.exports = KPI;
