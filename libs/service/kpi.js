@@ -1,4 +1,4 @@
-var models = require('../models/models.js');
+var model = require('../../models/kpi.js');
 
 class KPIService
 {
@@ -9,19 +9,22 @@ class KPIService
 
     load(id, callback, error)
     {
-        models.KPI.findOne({ where: { id: id } }).catch(error).then(result => {
+        model.findOne({ where: { id: id } }).catch(error).then(result => {
             var errorMessage = (result === null) ? 'KPI not found.' : false;
+            result.printName();
             callback(result, errorMessage);
         });
     }
 
     create(data, callback, error)
     {
-        models.KPI.create({ name: data.name}).catch(error).then(result => {
+        model.create({ name: data.name }).catch(error).then(result => {
             var errorMessage = (result === null) ? 'KPI not created.' : false;
             callback(result, errorMessage);
         });
     }
+
+
 }
 
 exports.KPIService = KPIService;

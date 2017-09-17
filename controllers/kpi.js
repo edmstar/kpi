@@ -1,6 +1,6 @@
 var bodyParser = require('body-parser');
 var controller = require('./icontroller.js');
-var kpi = require('../libs/kpi.js');
+var kpi = require('../libs/service/kpi.js');
 
 var service = null;
 var self = null;
