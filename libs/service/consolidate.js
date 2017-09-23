@@ -1,3 +1,7 @@
+var KPI = require('../../models/kpi.js');
+var KPI_VALUE = require('../../models/kpi_value.js');
+var utils = require('../utils.js');
+
 class ConsolidateService
 {
     constructor(app)
@@ -5,89 +9,279 @@ class ConsolidateService
         this.app = app;
     }
 
+    /**
+     * Consolidates KPI for the given @start and @end dates. Result is passed to callback.
+     * @param {KPI} kpi 
+     * @param {Date} start 
+     * @param {Date} end 
+     * @param {void} callback 
+     */
     consolidate(kpi, start, end, callback)
     {
-        if (kpi === null)
-            return;
+        if (!kpi)
+            callback(null);
 
-        var calculate = function(values)
+        var calculate = (function(values)
         {
-            var result = 0.0;
-            switch(kpi.method.toLowerCase())
-            {
-                case 'mean':
-                    result = this.calculateMean(values);
-                    break;
-                case 'weighted':
-                    result = this.calculateWeighted(values);
-                    break;
-                case 'sum':
-                    result = this.calculateSum(values);
-                    break;
-                case 'min':
-                    result = this.calculateMin(values);
-                    break;
-                case 'max':
-                    result = this.calculateMax(values);
-                    break;
-            }
-            callback(result);
-        }
+            callback(this.consolidateValues(values, kpi.consolidationType));  
+        }).bind(this);
 
-        kpi.getValues(start, end, calculate);
+        this.getElementsInPeriod(kpi, start, end, calculate);
     }
 
+    /**
+     * Calculates weighted mean value of {date, value} struct
+     * @param {[{ date: Date, value: float }]} values 
+     * @param {string} frequency
+     * @param {string} consolidation
+     */
+    consolidateMultiple(values, frequency, consolidation)
+    {
+        var containsFT = utils.containsFrequencyType(frequency);
+        if (!frequency || !values || !containsFT)
+            return [];
+
+        var mappedValues = new Map();
+
+        for(var index in values)
+        {
+            var value = values[index];
+            var referenceDate = utils.dateRoundDown(value.date, frequency);
+            var dateValue = mappedValues.get(referenceDate.getTime());
+            if(!dateValue)
+            {
+                dateValue = { date: referenceDate, values: [] };
+                mappedValues.set(referenceDate.getTime(), dateValue)
+            }
+            dateValue.values.push({ date: dateValue.date, value: value.value });
+        }
+
+        var consolidatedValues = [];
+
+        mappedValues.forEach((function(mappedValue)
+        {
+            var consolidationData = [];
+            consolidatedValues.push({ date: mappedValue.date, value: this.consolidateValues(mappedValue.values, consolidation) });
+        }).bind(this));
+
+        return consolidatedValues;
+    }
+
+    /**
+     * Consolidates value based on @consolidation type
+     * @param {[{ date: Date, value: float }]} values 
+     * @param {string} consolidation
+     */
+    consolidateValues(values, consolidation)
+    {
+        if (!values)
+            return null;
+        
+        switch(consolidation)
+        {
+            case 'mean':
+                return this.calculateMean(values);
+            case 'weighted':
+                return this.calculateWeighted(values);
+            case 'sum':
+                return this.calculateSum(values);
+            case 'min':
+                return this.calculateMin(values);
+            case 'max':
+                return this.calculateMax(values);
+        }
+        return result;
+    }
+
+    /**
+     * Calculates mean value of {date, value} struct
+     * @param {[{ date: Date, value: float }]} values 
+     */
     calculateMean(values, count)
     {
-        if (values === undefined || values.length === 0)
-            return 0.0;
+        if (!values || !values.length)
+            return null;
 
-        if (count === undefined)
+        if (count == undefined)
             count = values.length;
 
-        if (count === 0)
-            return 0.0;
+        if (!count)
+            return null;
 
         return this.calculateSum(values) / count;
     }
 
+    /**
+     * Calculates weighted mean value of {date, value} struct
+     * @param {[{ date: Date, value: float }]} values 
+     */
     calculateWeighted(values)
     {
-        if (value === undefined || values.length === 0)
-            return 0.0;
+        if (!values || !values.length)
+            return null;
 
         var sum = 0.0;
         var sumWeights = 0.0;
 
-        values.foreach(kpivalue =>
-        { 
-            sum += kpivalue.value*kpivalue.weight;
-            sumWeights += kpivalue.weight;
-        });
+        for(var index in values)
+        {
+            var kpivalue = values[index];
+            if (kpivalue.value)
+            {
+                sum += kpivalue.value*kpivalue.weight;
+                sumWeights += kpivalue.weight;
+            }
+        }
 
         return sum / sumWeights;
     }
 
+    /**
+     * Calculates sum of {date, value} struct
+     * @param {[{ date: Date, value: float }]} values 
+     */
     calculateSum(values)
     {
+        if (!values || !values.length)
+            return null;
+
         var sum = 0.0;
-        values.foreach(kpivalue => { sum += kpivalue.value; });
+        for(var index in values)
+        {
+            var kpivalue = values[index];
+            if (kpivalue.value)
+                sum += kpivalue.value;
+        }
 
         return sum;
     }
 
+    /**
+     * Calculates minimum value of {date, value} struct
+     * @param {[{ date: Date, value: float }]} values 
+     */
     calculateMin(values)
     {
+        if (!values || !values.length)
+            return null;
 
+        var min = values[0];
+        for(var index in values)
+        {
+            var kpivalue = values[index];
+            if (kpivalue.value && kpivalue.value < min)
+                min = kpivalue.value;
+        }
     }
 
+    /**
+     * Calculates maximum value of {date, value} struct
+     * @param {[{ date: Date, value: float }]} values 
+     */
     calculateMax(values)
     {
+        if (!values || !values.length)
+            return null;
 
+        var max = values[0];
+        for(var index in values)
+        {
+            var kpivalue = values[index];
+            if (kpivalue.value && kpivalue.value > max)
+                max = kpivalue.value;
+        }
     }
 
-    getElementsInPeriod(kpi, start, end)
+    /**
+     * KPI object where values will be extracted
+     * @param {KPI} kpi 
+     * @param {Date} start 
+     * @param {Date} end 
+     * @param {void} callback 
+     */
+    getElementsInPeriod(kpi, start, end, callback)
     {
-        if (kpi.)
+        if (!kpi)
+        {
+            if (callback) callback(null);
+            return;
+        }
+            
+        var roundedStart = utils.dateRoundDown(start, kpi.frequency);
+        var roundedEnd = utils.dateRoundUp(end, kpi.frequency);
+
+        console.log("Start: " + roundedStart);
+        console.log("End: " + roundedEnd);
+
+        if (kpi.frequency == null)
+        {
+            kpi.getPeriod(start, end, callback);
+            return;
+        }
+
+        var dates = utils.getDateRange(roundedStart, roundedEnd, kpi.frequency);
+
+        var getValuesCallback = (function(kpiValues)
+        {
+            console.log(dates);
+            console.log(kpiValues);
+
+            var aggregatedValues = [];
+
+            // aggregate by multipleConsolidation type
+            if (kpi.multipleConsolidationType)
+            {
+                aggregatedValues = this.consolidateMultiple(kpiValues, kpi.frequency, kpi.multipleConsolidationType);
+            }
+            else
+            {
+                aggregatedValues = this.consolidateMultiple(kpiValues, kpi.frequency, kpi.consolidationType);
+            }
+
+            console.log(aggregatedValues);
+
+            // merge values from empty date array
+            var consolidatedValues = this.mergeDateValues(dates, aggregatedValues);
+            
+            console.log(consolidatedValues);
+
+            if(callback) callback(consolidatedValues);
+        }).bind(this)
+        
+        kpi.getPeriod(start, end, getValuesCallback);
     }
+
+    /**
+     * 
+     * @param {[{date: Date, value: float}]} empty 
+     * @param {[{date: Date, value: float}]} data 
+     */
+    mergeDateValues(empty, data)
+    {
+        if (!empty)
+            return null;
+
+        var values = empty.slice();
+        var currentPosition = 0;
+
+        for(var index in data)
+        {
+            var value = data[index];
+            for(; currentPosition < values.length; currentPosition++)
+            {
+                var element = values[currentPosition];
+                if (element.date.getTime() === value.date.getTime())
+                {
+                    element.value = value.value;
+                    currentPosition++;
+                    break;
+                }
+            }
+        }
+
+        return values;
+    }
+
 }
+
+module.exports = new ConsolidateService();
