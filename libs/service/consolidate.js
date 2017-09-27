@@ -1,12 +1,10 @@
-var KPI = require('../../models/kpi.js');
-var KPI_VALUE = require('../../models/kpi_value.js');
 var utils = require('../utils.js');
 
 class ConsolidateService
 {
-    constructor(app)
+    constructor(sequelize)
     {
-        this.app = app;
+
     }
 
     /**
@@ -284,4 +282,4 @@ class ConsolidateService
 
 }
 
-module.exports = new ConsolidateService();
+module.exports = ConsolidateService;

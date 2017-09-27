@@ -1,18 +1,23 @@
 var bodyParser = require('body-parser');
 var controller = require('./icontroller.js');
-var kpi = require('../libs/service/kpi.js');
-var consolidate = require('../libs/service/consolidate.js');
+var KPIService = require('../libs/service/kpi.js');
+var ConsolidateService = require('../libs/service/consolidate.js');
 
 var service = null;
+var consolidate = null;
 var self = null;
 
 class KPIController extends controller.IController {
+
     constructor(app) {
         super(app);
-        service = new kpi.KPIService(this.app);
+        service = new KPIService(this.app.sequelize);
+        consolidate = new ConsolidateService(this.app.sequelize);
         self = this;
     }
+
     applyRoutes() {
+
         this.app.get("/kpi/:id", bodyParser.json(), function (req, res) {
             var callback = function (kpi, error) {
                 self.error(res, error);
@@ -47,7 +52,7 @@ class KPIController extends controller.IController {
         });
 
         this.app.post("/kpi/populate/:id", bodyParser.json(), function (req, res) {
-            service.populate();
+            service.populate({ id_kpi: req.params.id });
         });
     }
 }

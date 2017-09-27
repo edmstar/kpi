@@ -3,11 +3,12 @@ var mController = require('./controllers/icontroller.js');
 var path = require('path');
 var express = require('express');
 
-var KPI = require('./models/kpi.js');
-var KPI_VALUE = require('./models/kpi_value.js');
+var sequelize = require('./models/models.js').sequelize;
 
 global.appRoot = path.resolve(__dirname);
 var app = express();
+
+app.sequelize = sequelize;
 
 var routes = iroutes.getRoutesObject(app);
 

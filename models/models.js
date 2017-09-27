@@ -18,4 +18,15 @@ const sequelize = new Sequelize('kpi', 'admin', 'password', {
     }
   });
 
-module.exports = sequelize;
+
+// Generate tables
+function loadModels(seq, options, callback)
+{
+  var KPI = require('./kpi.js')(seq);
+  var KPI_VALUE = require('./kpi_value.js')(seq);
+
+  seq.sync(options).then(callback);
+}
+
+exports.sequelize = sequelize;
+exports.loadModels = loadModels;

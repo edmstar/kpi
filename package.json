@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -23,5 +23,8 @@
     "multer": "^1.3.0",
     "sequelize": "^4.8.4",
     "sqlite3": "^3.1.11"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2"
   }
 }
