@@ -2,7 +2,8 @@ var Sequelize = require('sequelize');
 var utils = require('../libs/utils.js');
 
 const tableName = 'KPI';
-const ERROR_VALIDATION_MULTIPLE_CONSOLIDATION = "It is not possible to set a consolidation for multiple values since the frequency is not set.";
+const ERROR_VALIDATION_MULTIPLE_CONSOLIDATION_FREQUENCY = "It is not possible to set a consolidation for multiple values since the frequency is not set.";
+const ERROR_VALIDATION_NO_MULTIPLE_CONSOLIDATION_WHEN_WEIGHTED = "It is not possible to set a consolidation for multiple values since the consolidation is weighted.";
 
 module.exports = function(sequelize)
 {
@@ -22,7 +23,10 @@ module.exports = function(sequelize)
             {
                 isNone(value) {
                     if (this.frequency === null && value !== null) {
-                        throw new Error(ERROR_VALIDATION_MULTIPLE_CONSOLIDATION);
+                        throw new Error(ERROR_VALIDATION_MULTIPLE_CONSOLIDATION_FREQUENCY);
+                    }
+                    if (this.consolidationType === utils.CONSOLIDATION_TYPES.WEIGHTED && value !== null) {
+                        throw new Error(ERROR_VALIDATION_NO_MULTIPLE_CONSOLIDATION_WHEN_WEIGHTED);
                     }
                 }
             }

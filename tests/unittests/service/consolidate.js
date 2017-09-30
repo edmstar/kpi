@@ -1,22 +1,160 @@
-// tests/part1/cart-summary-test.js
-var chai = require('chai');
+var chai = require('chai').use(require('chai-datetime'));
 var expect = chai.expect; // we are using the "expect" style of Chai
-var consolidate = require('../../../libs/service/consolidate.js');
 var model = require('../models.js');
+var utils = require('../../../libs/utils.js');
 
-describe('ConsolidateService', function() {
-  beforeEach(function(done)
-  {
-    this.timeout(10000);
-    model.resetModels(function()
-    {
-      model.populate(function() {
-        done()
+var ConsolidateService = require('../../../libs/service/consolidate.js');
+var consolidate = new ConsolidateService(model.sequelize);
+
+describe('ConsolidateService', function () {
+  before(function (done) {
+    this.timeout(5000);
+    model.resetModels(function () {
+      model.populate(function () {
+        done();
       });
     });
   });
 
-  it('getSubtotal() should return 0 if no items are passed in', function() {
-    expect(0).to.equal(0);
+  it('utils.getNextDate(date, frequency) should return the next date according to the frequency type provided', function () {
+    var startDate = new Date('2000-01-01T00:00:00Z');
+
+    var dates = [
+      {
+        expected: new Date('2000-01-01T00:00:01Z'),
+        frequency: utils.FREQUENCY_TYPES.SECONDS,
+      },
+      {
+        expected: new Date('2000-01-01T00:01:00Z'),
+        frequency: utils.FREQUENCY_TYPES.MINUTE,
+      },
+      {
+        expected: new Date('2000-01-01T01:00:00Z'),
+        frequency: utils.FREQUENCY_TYPES.HOUR,
+      },
+      {
+        expected: new Date('2000-01-02T00:00:00Z'),
+        frequency: utils.FREQUENCY_TYPES.DAY,
+      },
+      {
+        expected: new Date('2000-01-08T00:00:00Z'),
+        frequency: utils.FREQUENCY_TYPES.WEEK,
+      },
+      {
+        expected: new Date('2000-02-01T00:00:00Z'),
+        frequency: utils.FREQUENCY_TYPES.MONTH,
+      },
+      {
+        expected: new Date('2000-07-01T00:00:00Z'),
+        frequency: utils.FREQUENCY_TYPES.SEMESTER,
+      },
+      {
+        expected: new Date('2001-01-01T00:00:00Z'),
+        frequency: utils.FREQUENCY_TYPES.YEAR,
+      }
+    ];
+
+    for (var d in dates) {
+      var date = dates[d];
+      expect(utils.getNextDate(startDate, date.frequency)).to.equalDate(date.expected);
+    }
+
   });
+
+  it('ConsolidateServe.consolidateValues(values, consolidation) should return the consolidated value based on consolidation type provided', function () {
+    var startDate = new Date('2000-01-01T00:00:00Z');
+    var data = [
+      {
+        date: startDate,
+        value: 2.0,
+        weight: 2.0
+      },
+      {
+        date: utils.getNextDate(startDate, utils.FREQUENCY_TYPES.DAY),
+        value: 1.0,
+        weight: 1.0
+      },
+      {
+        date: utils.getNextDate(startDate, utils.FREQUENCY_TYPES.DAY, 2),
+        value: 3.0,
+        weight: 3.0
+      },
+    ];
+
+    expect(consolidate.consolidateValues(data, utils.CONSOLIDATION_TYPES.SUM)).to.equal(6.0);
+
+    expect(consolidate.consolidateValues(data, utils.CONSOLIDATION_TYPES.MEAN)).to.equal(2.0);
+
+    expect(consolidate.consolidateValues(data, utils.CONSOLIDATION_TYPES.WEIGHTED)).to.equal(14.0 / 6.0);
+
+    expect(consolidate.consolidateValues(data, utils.CONSOLIDATION_TYPES.MIN)).to.equal(1.0);
+
+    expect(consolidate.consolidateValues(data, utils.CONSOLIDATION_TYPES.MAX)).to.equal(3.0);
+
+  });
+
+  it('ConsolidateService.mergeDateValues(empty, data) should return 5 dates with values and 2 dates without values ordered by date ascending', function () {
+    var start = new Date('2010-10-04T00:00:00Z');
+    var end = utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 4);
+    var empty = utils.getDateRange(start, end, utils.FREQUENCY_TYPES.DAY);
+    var data = [
+      {
+        date: start,
+        value: 1.0,
+        weight: 1.0
+      },
+      {
+        date: utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, -1),
+        value: 1.0,
+        weight: 1.0
+      },
+      {
+        date: utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 4),
+        value: 1.0,
+        weight: 1.0
+      },
+      {
+        date: utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 2),
+        value: 1.0,
+        weight: 1.0
+      },
+      {
+        date: utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 6),
+        value: 1.0,
+        weight: 1.0
+      }
+    ];
+
+    var dates = consolidate.mergeDateValues(empty, data);
+
+    // Check lenght
+    expect(dates).to.have.length(7);
+
+    for(var index = 1; index < dates.length; index++)
+    {
+      // Check if ordering is ascending
+      expect(dates[index].date).to.afterDate(dates[index-1].date);
+    }
+
+    var countValues = 0;
+    var countWeight = 0;
+    for(var index in dates)
+    {
+      var date = dates[index];
+      if (date.value)
+        countValues++;
+        
+      if (date.weight)
+        countWeight++;
+    }
+
+    expect(countValues).to.equal(5);
+    expect(countWeight).to.equal(5);
+
+  });
+
+  it('ConsolidateService.consolidate(kpi, start, end, callback) should return 100 for KPI with {frequency=day, consolidation=sum, multipleConsolidation=sum}', function () {
+
+  });
+
 });

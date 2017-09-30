@@ -29,7 +29,7 @@ class ConsolidateService
 
     /**
      * Calculates weighted mean value of {date, value} struct
-     * @param {[{ date: Date, value: float }]} values 
+     * @param  values 
      * @param {string} frequency
      * @param {string} consolidation
      */
@@ -48,10 +48,10 @@ class ConsolidateService
             var dateValue = mappedValues.get(referenceDate.getTime());
             if(!dateValue)
             {
-                dateValue = { date: referenceDate, values: [] };
+                dateValue = { date: referenceDate, values: [], weights: [] };
                 mappedValues.set(referenceDate.getTime(), dateValue)
             }
-            dateValue.values.push({ date: dateValue.date, value: value.value });
+            dateValue.values.push({ date: dateValue.date, value: value.value, weight: value.weight });
         }
 
         var consolidatedValues = [];
@@ -67,7 +67,7 @@ class ConsolidateService
 
     /**
      * Consolidates value based on @consolidation type
-     * @param {[{ date: Date, value: float }]} values 
+     * @param {[{ date: Date, value: float, weight: float }]} values 
      * @param {string} consolidation
      */
     consolidateValues(values, consolidation)
@@ -92,8 +92,8 @@ class ConsolidateService
     }
 
     /**
-     * Calculates mean value of {date, value} struct
-     * @param {[{ date: Date, value: float }]} values 
+     * Calculates mean value of {date, value, weight} struct
+     * @param {[{ date: Date, value: float, weight: float }]} values 
      */
     calculateMean(values, count)
     {
@@ -110,8 +110,8 @@ class ConsolidateService
     }
 
     /**
-     * Calculates weighted mean value of {date, value} struct
-     * @param {[{ date: Date, value: float }]} values 
+     * Calculates weighted mean value of {date, value, weight} struct
+     * @param {[{ date: Date, value: float, weight: float }]} values 
      */
     calculateWeighted(values)
     {
@@ -135,8 +135,8 @@ class ConsolidateService
     }
 
     /**
-     * Calculates sum of {date, value} struct
-     * @param {[{ date: Date, value: float }]} values 
+     * Calculates sum of {date, value, weight} struct
+     * @param {[{ date: Date, value: float, weight: float }]} values 
      */
     calculateSum(values)
     {
@@ -155,39 +155,43 @@ class ConsolidateService
     }
 
     /**
-     * Calculates minimum value of {date, value} struct
-     * @param {[{ date: Date, value: float }]} values 
+     * Calculates minimum value of {date, value, weight} struct
+     * @param {[{ date: Date, value: float, weight: float }]} values 
      */
     calculateMin(values)
     {
         if (!values || !values.length)
             return null;
 
-        var min = values[0];
+        var min = values[0].value;
         for(var index in values)
         {
             var kpivalue = values[index];
             if (kpivalue.value && kpivalue.value < min)
                 min = kpivalue.value;
         }
+
+        return min;
     }
 
     /**
-     * Calculates maximum value of {date, value} struct
-     * @param {[{ date: Date, value: float }]} values 
+     * Calculates maximum value of {date, value, weight} struct
+     * @param {[{ date: Date, value: float, weight: float }]} values 
      */
     calculateMax(values)
     {
         if (!values || !values.length)
             return null;
 
-        var max = values[0];
+        var max = values[0].value;
         for(var index in values)
         {
             var kpivalue = values[index];
             if (kpivalue.value && kpivalue.value > max)
                 max = kpivalue.value;
         }
+
+        return max;
     }
 
     /**
@@ -233,7 +237,7 @@ class ConsolidateService
             }
             else
             {
-                aggregatedValues = this.consolidateMultiple(kpiValues, kpi.frequency, kpi.consolidationType);
+                aggregatedValues = kpiValues;//this.consolidateMultiple(kpiValues, kpi.frequency, kpi.consolidationType);
             }
 
             console.log(aggregatedValues);
@@ -251,29 +255,60 @@ class ConsolidateService
 
     /**
      * 
-     * @param {[{date: Date, value: float}]} empty 
-     * @param {[{date: Date, value: float}]} data 
+     * @param {[{date: Date, value: float, weight: float}]} empty 
+     * @param {[{date: Date, value: float, weight: float}]} data 
      */
     mergeDateValues(empty, data)
     {
         if (!empty)
             return null;
 
-        var values = empty.slice();
+        var sort = function(a, b)
+        {
+            return a.date.getTime() - b.date.getTime();
+        }
+
+        var values = empty.slice().sort(sort);
+        var dataValues = data.slice().sort(sort);
         var currentPosition = 0;
 
-        for(var index in data)
+        for(var index in dataValues)
         {
-            var value = data[index];
+            var value = dataValues[index];
+            var inserted = false;
+
+            // list is ordered, so we must continue from last insertion
             for(; currentPosition < values.length; currentPosition++)
             {
                 var element = values[currentPosition];
                 if (element.date.getTime() === value.date.getTime())
                 {
-                    element.value = value.value;
+                    values.splice(currentPosition, 1, {
+                        date: value.date,
+                        value: value.value,
+                        weight: value.weight
+                    });
+                    currentPosition++;
+                    inserted = true;
+                    break;
+                }
+                else if (element.date.getTime() > value.date.getTime())
+                {
+                    values.splice(currentPosition, 0, {
+                        date: value.date,
+                        value: value.value,
+                        weight: value.weight
+                    });
+                    inserted = true;
                     currentPosition++;
                     break;
                 }
+            }
+
+            if (!inserted && currentPosition >= values.length)
+            {
+                values = values.concat(dataValues.slice(index));
+                break;
             }
         }
 

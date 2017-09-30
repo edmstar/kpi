@@ -11,23 +11,57 @@ const HOUR = 'hour';
 const MINUTE = 'minute';
 const SECONDS = 'seconds';
 
+const FREQUENCY_TYPES = {
+    YEAR: 'year',
+    SEMESTER: 'semester',
+    MONTH: 'month',
+    WEEK: 'week',
+    DAY: 'day',
+    HOUR: 'hour',
+    MINUTE: 'minute',
+    SECONDS: 'seconds'
+}
+
+const CONSOLIDATION_TYPES = {
+    MEAN: 'mean',
+    WEIGHTED: 'weighted',
+    SUM: 'sum',
+    MIN: 'min',
+    MAX: 'max',
+    FORMULA: 'formula'
+}
+
 /**
  * @param {string[]} frequencyTypes
  * @param {string[]} consolidationTypes
  */
-var frequencyTypes = [YEAR, SEMESTER, MONTH, WEEK, DAY, HOUR, MINUTE, SECONDS];
-var consolidationTypes = ['mean', 'weighted', 'sum', 'min', 'max', 'formula'];
+var frequencyTypes = [];
+for(var element in FREQUENCY_TYPES)
+{
+    var value = FREQUENCY_TYPES[element];
+    frequencyTypes.push(value);
+}
+
+var consolidationTypes = [];
+for(var element in CONSOLIDATION_TYPES)
+{
+    var value = CONSOLIDATION_TYPES[element];
+    consolidationTypes.push(value);    
+}
 
 /**
  * Verifies if frequency type exists
  * @param {string} frequency 
  */
 function containsFrequencyType(frequency) {
+    if (!frequency || typeof frequency !== 'string')
+        return false;
+
     for(var index in frequencyTypes)
     {
-        var element = frequencyTypes[index];
+      var element = frequencyTypes[index];
         if(element.toLowerCase() === frequency.toLowerCase())
-            return true;
+          return true;
     }
     return false;
 }
@@ -36,36 +70,37 @@ function containsFrequencyType(frequency) {
  * Adds to current based on type 
  * @param {Date} current Current date
  * @param {string} frequency Type based on frequency
+ * @param {integer} count Units of date to be added
  */
-function getNextDate(current, frequency) {
-    if (!(current instanceof Date) || !containsFrequencyType(frequency))
+function getNextDate(current, frequency, count = 1) {
+    if (!(current instanceof Date) || (!frequency) || !containsFrequencyType(frequency))
         return null;
 
     var newDate = new Date(current);
     switch (frequency) {
         case YEAR:
-            newDate.setFullYear(newDate.getFullYear() + 1);
+            newDate.setFullYear(newDate.getFullYear() + 1*count);
             break;
         case SEMESTER:
-            newDate.setMonth(newDate.getMonth() + 6);
+            newDate.setMonth(newDate.getMonth() + 6*count);
             break;
         case MONTH:
-            newDate.setMonth(newDate.getMonth() + 1);
+            newDate.setMonth(newDate.getMonth() + 1*count);
             break;
         case WEEK:
-            newDate.setDate(newDate.getDate() + 7);
+            newDate.setDate(newDate.getDate() + 7*count);
             break;
         case DAY:
-            newDate.setDate(newDate.getDate() + 1);
+            newDate.setDate(newDate.getDate() + 1*count);
             break;
         case HOUR:
-            newDate.setHours(newDate.getHours() + 1);
+            newDate.setHours(newDate.getHours() + 1*count);
             break;
         case MINUTE:
-            newDate.setMinutes(newDate.getMinutes() + 1);
+            newDate.setMinutes(newDate.getMinutes() + 1*count);
             break;
         case SECONDS:
-            newDate.setSeconds(newDate.getSeconds() + 1);
+            newDate.setSeconds(newDate.getSeconds() + 1*count);
             break;
     }
 
@@ -78,7 +113,7 @@ function getNextDate(current, frequency) {
  * @param {string} frequency Type based on frequency
  */
 function getDateRange(start, end, frequency) {
-    if (!(start instanceof Date && end instanceof Date))
+    if (!(start instanceof Date && end instanceof Date) || (!frequency) || !containsFrequencyType(frequency))
         return null;
 
     var dateRange = [];
@@ -139,6 +174,8 @@ function dateRoundUp(current, frequency) {
     return newDate;
 }
 
+exports.CONSOLIDATION_TYPES = CONSOLIDATION_TYPES;
+exports.FREQUENCY_TYPES = FREQUENCY_TYPES;
 exports.frequencyTypes = frequencyTypes;
 exports.consolidationTypes = consolidationTypes;
 exports.containsFrequencyType = containsFrequencyType;

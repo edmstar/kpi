@@ -4,6 +4,11 @@ logs
 *.log
 npm-debug.log*
 
+# Emacs
+\#*\#
+.tern*
+
+
 # Runtime data
 pids
 *.pid
