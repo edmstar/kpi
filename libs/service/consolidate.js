@@ -212,8 +212,8 @@ class ConsolidateService
         var roundedStart = utils.dateRoundDown(start, kpi.frequency);
         var roundedEnd = utils.dateRoundUp(end, kpi.frequency);
 
-        console.log("Start: " + roundedStart);
-        console.log("End: " + roundedEnd);
+        //console.log("Start: " + roundedStart);
+        //console.log("End: " + roundedEnd);
 
         if (kpi.frequency == null)
         {
@@ -225,8 +225,8 @@ class ConsolidateService
 
         var getValuesCallback = (function(kpiValues)
         {
-            console.log(dates);
-            console.log(kpiValues);
+            //console.log(dates);
+            //console.log(kpiValues);
 
             var aggregatedValues = [];
 
@@ -240,12 +240,12 @@ class ConsolidateService
                 aggregatedValues = kpiValues;//this.consolidateMultiple(kpiValues, kpi.frequency, kpi.consolidationType);
             }
 
-            console.log(aggregatedValues);
+            //console.log(aggregatedValues);
 
             // merge values from empty date array
             var consolidatedValues = this.mergeDateValues(dates, aggregatedValues);
             
-            console.log(consolidatedValues);
+            //console.log(consolidatedValues);
 
             if(callback) callback(consolidatedValues);
         }).bind(this)

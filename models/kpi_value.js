@@ -57,7 +57,7 @@ module.exports = function(sequelize)
                 ]
             }
         ).catch().then(result => {
-            console.log(result);
+            //console.log(result);
             if (result)
                 callback(result[0].kpiValues);
             else

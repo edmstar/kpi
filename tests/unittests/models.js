@@ -1,5 +1,6 @@
 var Sequelize = require('sequelize');
 var utils = require('../../libs/utils.js');
+var constants = require('./constants.js');
 
 const sequelize = new Sequelize('kpi', 'admin', 'password', {
   host: 'localhost',
@@ -57,20 +58,18 @@ function populateKPI(callback) {
  */
 function populateKPIValues(values, callback) {
   var KPI_VALUE = require('../../models/kpi_value.js')(sequelize); 
-  var size = 10;
-  var days = 10;
   var kpiValues = [];
 
   for(var i in values) {
     var kpi = values[i];
-    var start = new Date('01/01/2000 00:00:00 +00:00');
-    var end = utils.getNextDate(start, kpi.dataValues.frequency, days-1);
-    var dateRange = utils.getDateRange(start, end, kpi.dataValues.frequency);
+    var start = constants.startDate;
+    var end = utils.getNextDate(start, kpi.frequency, constants.days-1);
+    var dateRange = utils.getDateRange(start, end, kpi.frequency);
 
     for(var d in dateRange)
     {
       var dateItem = dateRange[d];
-      for(var i=0; i<size; i++)
+      for(var i=0; i<constants.size; i++)
       {
         kpiValues.push({ id_kpi: kpi.id, date: dateItem.date, value: 1 });
       }
@@ -87,5 +86,11 @@ exports.populate = function (callback) {
 
 exports.sequelize = sequelize;
 exports.resetModels = function (callback) {
-  models.loadModels(sequelize, { force: true }, callback);
+  models.loadModels(sequelize, { force: true }, function()
+  {
+    exports.KPI = models.KPI;
+    exports.KPI_VALUE = models.KPI_VALUE;
+
+    callback();
+  });
 };

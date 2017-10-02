@@ -25,6 +25,9 @@ function loadModels(seq, options, callback)
   var KPI = require('./kpi.js')(seq);
   var KPI_VALUE = require('./kpi_value.js')(seq);
 
+  exports.KPI = KPI;
+  exports.KPI_VALUE = KPI_VALUE;
+
   seq.sync(options).then(callback);
 }
 

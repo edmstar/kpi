@@ -2,6 +2,7 @@ var chai = require('chai').use(require('chai-datetime'));
 var expect = chai.expect; // we are using the "expect" style of Chai
 var model = require('../models.js');
 var utils = require('../../../libs/utils.js');
+var constants = require('../constants.js')
 
 var ConsolidateService = require('../../../libs/service/consolidate.js');
 var consolidate = new ConsolidateService(model.sequelize);
@@ -16,50 +17,6 @@ describe('ConsolidateService', function () {
     });
   });
 
-  it('utils.getNextDate(date, frequency) should return the next date according to the frequency type provided', function () {
-    var startDate = new Date('2000-01-01T00:00:00Z');
-
-    var dates = [
-      {
-        expected: new Date('2000-01-01T00:00:01Z'),
-        frequency: utils.FREQUENCY_TYPES.SECONDS,
-      },
-      {
-        expected: new Date('2000-01-01T00:01:00Z'),
-        frequency: utils.FREQUENCY_TYPES.MINUTE,
-      },
-      {
-        expected: new Date('2000-01-01T01:00:00Z'),
-        frequency: utils.FREQUENCY_TYPES.HOUR,
-      },
-      {
-        expected: new Date('2000-01-02T00:00:00Z'),
-        frequency: utils.FREQUENCY_TYPES.DAY,
-      },
-      {
-        expected: new Date('2000-01-08T00:00:00Z'),
-        frequency: utils.FREQUENCY_TYPES.WEEK,
-      },
-      {
-        expected: new Date('2000-02-01T00:00:00Z'),
-        frequency: utils.FREQUENCY_TYPES.MONTH,
-      },
-      {
-        expected: new Date('2000-07-01T00:00:00Z'),
-        frequency: utils.FREQUENCY_TYPES.SEMESTER,
-      },
-      {
-        expected: new Date('2001-01-01T00:00:00Z'),
-        frequency: utils.FREQUENCY_TYPES.YEAR,
-      }
-    ];
-
-    for (var d in dates) {
-      var date = dates[d];
-      expect(utils.getNextDate(startDate, date.frequency)).to.equalDate(date.expected);
-    }
-
-  });
 
   it('ConsolidateServe.consolidateValues(values, consolidation) should return the consolidated value based on consolidation type provided', function () {
     var startDate = new Date('2000-01-01T00:00:00Z');
@@ -130,20 +87,18 @@ describe('ConsolidateService', function () {
     // Check lenght
     expect(dates).to.have.length(7);
 
-    for(var index = 1; index < dates.length; index++)
-    {
+    for (var index = 1; index < dates.length; index++) {
       // Check if ordering is ascending
-      expect(dates[index].date).to.afterDate(dates[index-1].date);
+      expect(dates[index].date).to.afterDate(dates[index - 1].date);
     }
 
     var countValues = 0;
     var countWeight = 0;
-    for(var index in dates)
-    {
+    for (var index in dates) {
       var date = dates[index];
       if (date.value)
         countValues++;
-        
+
       if (date.weight)
         countWeight++;
     }
@@ -153,8 +108,42 @@ describe('ConsolidateService', function () {
 
   });
 
-  it('ConsolidateService.consolidate(kpi, start, end, callback) should return 100 for KPI with {frequency=day, consolidation=sum, multipleConsolidation=sum}', function () {
+  it('ConsolidateService.consolidate(kpi, start, end, callback) should return 100 for KPI with {frequency=day, consolidation=sum, multipleConsolidation=sum}', function (done) {
 
+    var name = "KPI|" + utils.CONSOLIDATION_TYPES.SUM + "|" + utils.FREQUENCY_TYPES.DAY;
+
+    evaluateKpiConsolidation(name, 100, done);
+  });
+
+  it('ConsolidateService.consolidate(kpi, start, end, callback) should return 10 for KPI with {frequency=day, consolidation=mean, multipleConsolidation=sum}', function (done) {
+
+    var name = "KPI|" + utils.CONSOLIDATION_TYPES.MEAN + "|" + utils.FREQUENCY_TYPES.DAY;
+
+    evaluateKpiConsolidation(name, 10, done);
   });
 
 });
+
+function evaluateKpiConsolidation(name, value, done) {
+  var kpi = null;
+
+  model.KPI.findAll({
+    where: {
+      name: name
+    }
+  }).catch(function () {
+    expect.fail(0, 1, "KPI not found");
+    done();
+  }).then(function (values) {
+    expect(values).to.have.length(1);
+    kpi = values[0];
+
+    var start = constants.startDate;
+    var end = utils.getNextDate(start, kpi.frequency, constants.days - 1);
+
+    consolidate.consolidate(kpi, start, end, function (result) {
+      expect(result).to.equal(value);
+      done();
+    });
+  });
+}
