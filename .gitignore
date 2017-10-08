@@ -34,5 +34,5 @@ node_modules
 
 # Emacs configs
 .projectile
-\#*\#
+*\#*
 .tern*

@@ -1,18 +1,18 @@
 var bodyParser = require('body-parser');
 var controller = require('./icontroller.js');
-var KPIService = require('../libs/service/kpi.js');
-var ConsolidateService = require('../libs/service/consolidate.js');
+var KPIData = require('../libs/data/kpi.js');
+// var ConsolidateData = require('../libs/data/consolidate.js');
 
-var service = null;
-var consolidate = null;
+var dataServiceKPI = null;
+var dataServiceConsolidate = null;
 var self = null;
 
 class KPIController extends controller.IController {
 
     constructor(app) {
         super(app);
-        service = new KPIService(this.app.sequelize);
-        consolidate = new ConsolidateService(this.app.sequelize);
+        dataServiceKPI = new KPIData(this.app.sequelize);
+        // dataServiceConsolidate = new ConsolidateData(this.app.sequelize);
         self = this;
     }
 
@@ -21,32 +21,77 @@ class KPIController extends controller.IController {
      */
     applyRoutes() {
 
-        this.app.get("/kpi/:id", bodyParser.json(), function (req, res) {
-            var callback = function (kpi, error) {
+        this.app.get("/kpi/:id", bodyParser.json(), function(req, res) {
+            var callback = function(kpi, error) {
                 self.error(res, error);
                 res.status(200);
                 res.send(kpi);
             };
 
-            var error = (errors => { self.error(res, errors); });
-            service.load(req.params.id, callback, error);
+            var error = (errors => {
+                self.error(res, errors);
+            });
+
+            dataServiceKPI.load({
+                id: req.params.id
+            }, callback, error);
         });
 
-        this.app.post("/kpi", bodyParser.json(), function (req, res) {
-            var callback = function (kpi, error) {
+        this.app.post("/kpi", bodyParser.json(), function(req, res) {
+            var callback = function(kpi, error) {
                 self.error(req, error);
-
                 res.status(200);
                 res.send("Successfuly created!");
             };
 
-            var error = (errors => { self.error(res, errors); });
+            var error = (errors => {
+                self.error(res, errors);
+            });
 
-            service.create({ name: req.body.name, frequency: req.body.frequency }, callback, error);
+            dataServiceKPI.create({
+                name: req.body.name,
+                format: req.body.format,
+                consolidationType: req.body.consolidation,
+                formula: req.body.formula,
+                frequency: req.body.frequency,
+                multipleConsolidationType: req.body.multipleConsolidationType,
+                target: req.body.target
+            }, callback, error);
         });
 
-        this.app.post("/kpi/populate/:id", bodyParser.json(), function (req, res) {
-            service.populate({ id_kpi: req.params.id });
+        this.app.post("/kpi/value", bodyParser.json(), function(req, res) {
+            var callback = function(kpi, error) {
+                self.error(res, error);
+                res.status(200);
+                res.send("Successfuly added");
+            };
+
+            var error = (errors => {
+                self.error(res, errors);
+            });
+
+            dataServiceKPI.addValue({
+                date: req.body.date,
+                value: req.body.value,
+                weight: req.body.weight || 1.0,
+                id_kpi: req.body.kpi
+            }, callback, error);
+        });
+
+        this.app.get("/kpi/name/:name", bodyParser.json(), function(req, red) {
+            var callback = function(kpi, error) {
+                self.error(res, error);
+                res.status(200);
+                res.send(kpi);
+            };
+
+            var error = (errors => {
+                self.error(res, errors);
+            });
+
+            dataServiceKPI.loadByName({
+                name: req.body.name
+            }, callback, error);
         });
     }
 }

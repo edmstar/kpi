@@ -20,7 +20,7 @@ const FREQUENCY_TYPES = {
     HOUR: 'hour',
     MINUTE: 'minute',
     SECONDS: 'seconds'
-}
+};
 
 const CONSOLIDATION_TYPES = {
     MEAN: 'mean',
@@ -29,24 +29,41 @@ const CONSOLIDATION_TYPES = {
     MIN: 'min',
     MAX: 'max',
     FORMULA: 'formula'
-}
+};
 
 /**
  * @param {string[]} frequencyTypes
  * @param {string[]} consolidationTypes
  */
 var frequencyTypes = [];
-for(var element in FREQUENCY_TYPES)
-{
+for (var element in FREQUENCY_TYPES) {
     var value = FREQUENCY_TYPES[element];
     frequencyTypes.push(value);
 }
 
 var consolidationTypes = [];
-for(var element in CONSOLIDATION_TYPES)
-{
-    var value = CONSOLIDATION_TYPES[element];
-    consolidationTypes.push(value);    
+for (element in CONSOLIDATION_TYPES) {
+    value = CONSOLIDATION_TYPES[element];
+    consolidationTypes.push(value);
+}
+
+const SUCCESS = 0;
+const ERROR = 1;
+
+function success(data) {
+    return {
+        status: SUCCESS,
+        error: "",
+        data: data
+    };
+}
+
+function error(e) {
+    return {
+        status: ERROR,
+        error: e,
+        data: {}
+    };
 }
 
 /**
@@ -57,11 +74,10 @@ function containsFrequencyType(frequency) {
     if (!frequency || typeof frequency !== 'string')
         return false;
 
-    for(var index in frequencyTypes)
-    {
-      var element = frequencyTypes[index];
-        if(element.toLowerCase() === frequency.toLowerCase())
-          return true;
+    for (var index in frequencyTypes) {
+        var element = frequencyTypes[index];
+        if (element.toLowerCase() === frequency.toLowerCase())
+            return true;
     }
     return false;
 }
@@ -79,28 +95,28 @@ function getNextDate(current, frequency, count = 1) {
     var newDate = new Date(current);
     switch (frequency) {
         case YEAR:
-            newDate.setFullYear(newDate.getFullYear() + 1*count);
+            newDate.setFullYear(newDate.getFullYear() + 1 * count);
             break;
         case SEMESTER:
-            newDate.setMonth(newDate.getMonth() + 6*count);
+            newDate.setMonth(newDate.getMonth() + 6 * count);
             break;
         case MONTH:
-            newDate.setMonth(newDate.getMonth() + 1*count);
+            newDate.setMonth(newDate.getMonth() + 1 * count);
             break;
         case WEEK:
-            newDate.setDate(newDate.getDate() + 7*count);
+            newDate.setDate(newDate.getDate() + 7 * count);
             break;
         case DAY:
-            newDate.setDate(newDate.getDate() + 1*count);
+            newDate.setDate(newDate.getDate() + 1 * count);
             break;
         case HOUR:
-            newDate.setHours(newDate.getHours() + 1*count);
+            newDate.setHours(newDate.getHours() + 1 * count);
             break;
         case MINUTE:
-            newDate.setMinutes(newDate.getMinutes() + 1*count);
+            newDate.setMinutes(newDate.getMinutes() + 1 * count);
             break;
         case SECONDS:
-            newDate.setSeconds(newDate.getSeconds() + 1*count);
+            newDate.setSeconds(newDate.getSeconds() + 1 * count);
             break;
     }
 
@@ -167,13 +183,15 @@ function dateRoundUp(current, frequency) {
 
     var newDate = dateRoundDown(current, frequency);
     newDate = getNextDate(newDate, frequency);
-    
+
     if (frequency != SECONDS)
         newDate.setSeconds(newDate.getSeconds() - 1);
 
     return newDate;
 }
 
+exports.success = success;
+exports.error = error;
 exports.CONSOLIDATION_TYPES = CONSOLIDATION_TYPES;
 exports.FREQUENCY_TYPES = FREQUENCY_TYPES;
 exports.frequencyTypes = frequencyTypes;
