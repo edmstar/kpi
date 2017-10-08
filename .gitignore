@@ -4,11 +4,6 @@ logs
 *.log
 npm-debug.log*
 
-# Emacs
-\#*\#
-.tern*
-
-
 # Runtime data
 pids
 *.pid
@@ -36,3 +31,8 @@ build/Release
 # https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git
 node_modules
 .vscode
+
+# Emacs configs
+.projectile
+\#*\#
+.tern*

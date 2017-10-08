@@ -7,6 +7,7 @@ class KPIService {
     load(id, callback, error) {
         this.modelKpi.findOne({ where: { id: id } }).catch(error).then(result => {
             var errorMessage = (result === null) ? 'KPI not found.' : false;
+            console.log(result);
             callback(result, errorMessage);
         });
     }

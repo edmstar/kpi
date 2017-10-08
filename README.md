@@ -7,7 +7,7 @@ KPI Service
 
 * Basic backend functionality
     * (.) Expose functions through RESTful API with token authentication
-    * (.) Create, update and delete KPIs and its values
+    * (-) Create, update and delete KPIs and its values
     * (.) Retrieve KPI values and consolidate KPIs based on values, frequency and period
     * ( ) Allow dependencies between KPIs (manually or through formula)
     * (.) Generate consolidated and granular output for report generation
@@ -28,6 +28,7 @@ KPI Service
     * ( ) Configure access to KPI groups
     * ( ) Log API activity
     * ( ) Allow hooks
+    * ( ) Allow multiple consolidation for weighted KPIs
 
 * Frontend functionality
     * TBD

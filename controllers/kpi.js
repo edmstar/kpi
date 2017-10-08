@@ -16,25 +16,19 @@ class KPIController extends controller.IController {
         self = this;
     }
 
+    /**
+     * Applies routes
+     */
     applyRoutes() {
 
         this.app.get("/kpi/:id", bodyParser.json(), function (req, res) {
             var callback = function (kpi, error) {
                 self.error(res, error);
-
                 res.status(200);
-                var start = new Date('2016-09-21');
-                var end = new Date(start);
-                end.setHours(start.getHours() + 31 * 24);
-                end.setSeconds(start.getSeconds() - 1);
-                consolidate.consolidate(kpi, start, end, function (values) {
-                    res.send({ value: values });
-                });
-                console.log(kpi);
+                res.send(kpi);
             };
 
-            var error = (errors => { self.error(res, errors) });
-
+            var error = (errors => { self.error(res, errors); });
             service.load(req.params.id, callback, error);
         });
 
@@ -46,7 +40,7 @@ class KPIController extends controller.IController {
                 res.send("Successfuly created!");
             };
 
-            var error = (errors => { self.error(res, errors) });
+            var error = (errors => { self.error(res, errors); });
 
             service.create({ name: req.body.name, frequency: req.body.frequency }, callback, error);
         });
