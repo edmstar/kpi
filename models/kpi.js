@@ -4,6 +4,8 @@ var utils = require('../libs/utils.js');
 const TABLE_NAME = 'KPI';
 const ERROR_VALIDATION_MULTIPLE_CONSOLIDATION_FREQUENCY = "It is not possible to set a consolidation for multiple values since the frequency is not set.";
 const ERROR_VALIDATION_NO_MULTIPLE_CONSOLIDATION_WHEN_WEIGHTED = "It is not possible to set a consolidation for multiple values since the consolidation is weighted.";
+const ERROR_TARGET_MARGIN_KPI_NULL = "Margin KPI not selected.";
+const ERROR_TARGET_MARGIN_CONSTANT_NULL = "Margin value not specified.";
 
 module.exports = function(sequelize) {
     if (sequelize.isDefined(TABLE_NAME))
@@ -22,8 +24,8 @@ module.exports = function(sequelize) {
         },
         format: {
             type: Sequelize.STRING,
-            defaultValue: "##,###.00",
-            allowNull: false,
+            defaultValue: null,
+            allowNull: true,
             validate: {
                 is: /(^\-?[\#\,]+)(\.?[0]{1,11})?\%?$/i
             }
@@ -31,9 +33,9 @@ module.exports = function(sequelize) {
         consolidationType: {
             type: Sequelize.ENUM,
             field: 'consolidation',
-            values: utils.consolidationTypes,
+            values: utils.consolidationTypeEnum.getTypes(),
             allowNull: false,
-            defaultValue: utils.consolidationTypes[0]
+            defaultValue: utils.CONSOLIDATION_TYPES.MEAN
         },
         formula: {
             type: Sequelize.STRING,
@@ -42,14 +44,14 @@ module.exports = function(sequelize) {
         },
         frequency: {
             type: Sequelize.ENUM,
-            values: utils.frequencyTypes,
+            values: utils.frequencyTypeEnum.getTypes(),
             allowNull: true,
             defaultValue: null
         },
         multipleConsolidationType: {
             type: Sequelize.ENUM,
             field: 'multiple_consolidation',
-            values: utils.consolidationTypes,
+            values: utils.consolidationTypeEnum.getTypes(),
             allowNull: true,
             defaultValue: null,
             validate: {
@@ -63,10 +65,49 @@ module.exports = function(sequelize) {
                 }
             }
         },
+        target_type: {
+            type: Sequelize.DOUBLE,
+            allowNull: true,
+            defaultValue: null
+        },
         target: {
             type: Sequelize.DOUBLE,
             allowNull: true,
             defaultValue: null
+        },
+        target_min_type: {
+            type: Sequelize.ENUM,
+            allowNull: true,
+            defaultValue: utils.TARGET_MARGIN_TYPES.NONE,
+            values: utils.targetTypeEnum.getTypes()
+        },
+        target_min: {
+            type: Sequelize.DOUBLE,
+            allowNull: true,
+            defaultValue: null,
+            validate: {
+                isConstantOrPercentage(value) {
+                    if ((this.target_min_type === utils.TARGET_MARGIN_TYPES.CONSTANT || this.target_min_type === utils.TARGET_MARGIN_TYPES.PERCENTAGE) && value === null)
+                        throw new Error(ERROR_TARGET_MARGIN_CONSTANT_NULL);
+                }
+            }
+        },
+        target_max_type: {
+            type: Sequelize.ENUM,
+            allowNull: true,
+            defaultValue: utils.TARGET_MARGIN_TYPES.NONE,
+            values: utils.targetTypeEnum.getTypes()
+        },
+        target_max: {
+            type: Sequelize.DOUBLE,
+            allowNull: true,
+            defaultValue: null,
+            validate: {
+                isConstantOrPercentage(value) {
+                    if ((this.target_max_type === utils.TARGET_MARGIN_TYPES.CONSTANT || this.target_max_type === utils.TARGET_MARGIN_TYPES.PERCENTAGE) && value === null)
+                        throw new Error(ERROR_TARGET_MARGIN_CONSTANT_NULL);
+                }
+            }
         }
     });
 
@@ -74,7 +115,39 @@ module.exports = function(sequelize) {
         as: 'Target',
         foreignKey: 'target_kpi',
         allowNull: true,
-        defaultValue: null
+        defaultValue: null,
+        validate: {
+            isKPI(value) {
+                if (this.target_type === utils.TARGET_TYPES.KPI && value === null)
+                    throw new Error(ERROR_TARGET_KPI_NULL);
+            }
+        }
+    });
+
+    KPI.hasOne(KPI, {
+        as: 'TargetMin',
+        foreignKey: 'target_min_kpi',
+        allowNull: true,
+        defaultValue: null,
+        validate: {
+            isKPI(value) {
+                if (this.target_min_type === utils.TARGET_MARGIN_TYPES.KPI && value === null)
+                    throw new Error(ERROR_TARGET_MARGIN_KPI_NULL);
+            }
+        }
+    });
+
+    KPI.hasOne(KPI, {
+        as: 'TargetMax',
+        foreignKey: 'target_max_kpi',
+        allowNull: true,
+        defaultValue: null,
+        validate: {
+            isKPI(value) {
+                if (this.target_max_type === utils.TARGET_MARGIN_TYPES.KPI && value === null)
+                    throw new Error(ERROR_TARGET_MARGIN_KPI_NULL);
+            }
+        }
     });
 
     return KPI;

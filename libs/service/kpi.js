@@ -5,15 +5,26 @@ class KPIService {
     }
 
     load(id, callback, error) {
-        this.modelKpi.findOne({ where: { id: id } }).catch(error).then(result => {
+        this.modelKpi.findOne({
+            where: {
+                id: id
+            }
+        }).catch(error).then(result => {
             var errorMessage = (result === null) ? 'KPI not found.' : false;
-            console.log(result);
             callback(result, errorMessage);
         });
     }
 
     create(data, callback, error) {
-        this.modelKpi.create({ name: data.name, frequency: data.frequency }).catch(error).then(result => {
+        this.modelKpi.create({
+            name: data.name,
+            format: data.format,
+            consolidationType: data.consolidationType,
+            formula: data.formula,
+            frequency: data.frequency,
+            multipleConsolidationType: data.multipleConsolidationType,
+            target: data.target
+        }).catch(error).then(result => {
             var errorMessage = (result === null) ? 'KPI not created.' : false;
             callback(result, errorMessage);
         });
@@ -21,15 +32,23 @@ class KPIService {
 
     populate(data) {
         var currentDate = new Date('2016-09-22 00:00:00');
-        for(var i = 0; i<90; i++)
-        {
-            this.addValue({ id_kpi: data.id_kpi, date: new Date(currentDate), value: i % 3 }, function() {}, function() {});
+        for (var i = 0; i < 90; i++) {
+            this.addValue({
+                id_kpi: data.id_kpi,
+                date: new Date(currentDate),
+                value: i % 3
+            }, function() {}, function() {});
             currentDate.setHours(currentDate.getHours() + 8);
         }
     }
 
     addValue(data, callback, error) {
-        this.modelValue.create({ date: data.date, value: data.value, weight: 1, id_kpi: data.id_kpi }).catch(error).then(result => {
+        this.modelValue.create({
+            date: data.date,
+            value: data.value,
+            weight: 1,
+            id_kpi: data.id_kpi
+        }).catch(error).then(result => {
             var errorMessage = (result === null) ? 'KPI not created.' : false;
             callback(result, errorMessage);
         });

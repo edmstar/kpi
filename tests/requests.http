@@ -3,13 +3,32 @@
 
 ### Load KPI
 
-GET :server/kpi/06d48c24-23ee-4b03-95d1-d39322ad16d8
+GET :server/kpi/06d48c24-23ee-4b03-95d1-d39322ad16d9
 X-Access-Token: :token
 
 ### Load KPI 2
 
 GET :server/kpi/06d48c24-23ee-4b03-95d1-d39322ad16d8
 X-Access-Token: :token
+
+### Insert KPI
+
+POST :server/kpi/
+Content-Type: application/json
+X-Access-Token: :token
+
+{
+  "name": "KPIName7",
+  "consolidationType": "mean",
+  "frequency": "day",
+  "multipleConsolidationType": "sum",
+  "target_type": "kpi",
+  "target": "f2828d20-500c-4da0-95e7-706321969f32",
+  "target_min_type": "constant",
+  "target": "5",
+  "target_max_type": "percentage",
+  "target": "1.2"
+}
 
 ### Login
 

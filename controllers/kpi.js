@@ -41,22 +41,24 @@ class KPIController extends controller.IController {
             var callback = function(kpi, error) {
                 self.error(req, error);
                 res.status(200);
-                res.send("Successfuly created!");
+                res.send(kpi);
             };
 
             var error = (errors => {
                 self.error(res, errors);
             });
 
-            dataServiceKPI.create({
-                name: req.body.name,
-                format: req.body.format,
-                consolidationType: req.body.consolidation,
-                formula: req.body.formula,
-                frequency: req.body.frequency,
-                multipleConsolidationType: req.body.multipleConsolidationType,
-                target: req.body.target
-            }, callback, error);
+            dataServiceKPI.create(req.body
+                // {
+                // name: req.body.name,
+                // format: req.body.format,
+                // consolidationType: req.body.consolidationType,
+                // formula: req.body.formula,
+                // frequency: req.body.frequency,
+                // multipleConsolidationType: req.body.multipleConsolidationType,
+                // target: req.body.target
+                // }
+                , callback, error);
         });
 
         this.app.post("/kpi/value", bodyParser.json(), function(req, res) {

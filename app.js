@@ -1,9 +1,15 @@
+var argparse = require('./libs/argparse.js');
 var iroutes = require('./controllers/routes.js');
 var mController = require('./controllers/icontroller.js');
 var path = require('path');
 var express = require('express');
 
-var sequelize = require('./models/models.js').sequelize;
+var models = require('./models/models.js');
+var sequelize = models.sequelize;
+
+// Regenerates database if --database is passed
+if (argparse.database)
+    models.sequelize.sync({ force: true });
 
 global.appRoot = path.resolve(__dirname);
 var app = express();

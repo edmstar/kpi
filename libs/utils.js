@@ -2,16 +2,22 @@
     Utils
 */
 
-const YEAR = 'year';
-const SEMESTER = 'semester';
-const MONTH = 'month';
-const WEEK = 'week';
-const DAY = 'day';
-const HOUR = 'hour';
-const MINUTE = 'minute';
-const SECONDS = 'seconds';
+var Enum = require('./enum.js');
 
 const FREQUENCY_TYPES = {
+    NONE: null,
+    YEAR: 0,
+    SEMESTER: 1,
+    MONTH: 2,
+    WEEK: 3,
+    DAY: 4,
+    HOUR: 5,
+    MINUTE: 6,
+    SECONDS: 7
+};
+
+const FREQUENCY_TYPES_TRANSLATION = {
+    NONE: '',
     YEAR: 'year',
     SEMESTER: 'semester',
     MONTH: 'month',
@@ -23,6 +29,16 @@ const FREQUENCY_TYPES = {
 };
 
 const CONSOLIDATION_TYPES = {
+    MEAN: 1,
+    WEIGHTED: 2,
+    SUM: 3,
+    MIN: 4,
+    MAX: 5,
+    FORMULA: 6
+};
+
+const CONSOLIDATION_TYPES_TRANSLATION = {
+    NONE: '',
     MEAN: 'mean',
     WEIGHTED: 'weighted',
     SUM: 'sum',
@@ -31,21 +47,56 @@ const CONSOLIDATION_TYPES = {
     FORMULA: 'formula'
 };
 
-/**
- * @param {string[]} frequencyTypes
- * @param {string[]} consolidationTypes
- */
-var frequencyTypes = [];
-for (var element in FREQUENCY_TYPES) {
-    var value = FREQUENCY_TYPES[element];
-    frequencyTypes.push(value);
-}
+const TARGET_TYPES = {
+    NONE: null,
+    CONSTANT: 0,
+    KPI: 1
+};
 
-var consolidationTypes = [];
-for (element in CONSOLIDATION_TYPES) {
-    value = CONSOLIDATION_TYPES[element];
-    consolidationTypes.push(value);
-}
+const TARGET_TYPES_TRANSLATION = {
+    NONE: '',
+    CONSTANT: 'constant',
+    KPI: 'kpi',
+    PERCENTAGE: 'percentage'
+};
+
+const TARGET_MARGIN_TYPES = {
+    NONE: null,
+    CONSTANT: 0,
+    KPI: 1,
+    PERCENTAGE: 2
+};
+
+const TARGET_MARGIN_TYPES_TRANSLATION = {
+    NONE: '',
+    CONSTANT: 'constant',
+    KPI: 'kpi',
+    PERCENTAGE: 'percentage'
+};
+
+const TREND_TYPES = {
+    NONE: null,
+    UP: 0,
+    DOWN: 1
+};
+
+const TREND_TYPES_TRANSLATION = {
+    NONE: '',
+    UP: 'up',
+    DOWN: 'down'
+};
+
+var consolidationTypeEnum = new Enum(CONSOLIDATION_TYPES, CONSOLIDATION_TYPES_TRANSLATION);
+var frequencyTypeEnum = new Enum(FREQUENCY_TYPES, FREQUENCY_TYPES_TRANSLATION);
+var targetTypeEnum = new Enum(TARGET_TYPES, TARGET_TYPES_TRANSLATION);
+var targetMarginTypeEnum = new Enum(TARGET_MARGIN_TYPES, TARGET_MARGIN_TYPES_TRANSLATION);
+var trendTypeEnum = new Enum(TREND_TYPES, TREND_TYPES_TRANSLATION);
+
+exports.consolidationTypeEnum = consolidationTypeEnum;
+exports.frequencyTypeEnum = frequencyTypeEnum;
+exports.targetTypeEnum = targetTypeEnum;
+exports.targetMarginTypeEnum = targetMarginTypeEnum;
+exports.trendTypeEnum = trendTypeEnum;
 
 const SUCCESS = 0;
 const ERROR = 1;
@@ -71,6 +122,8 @@ function error(e) {
  * @param {string} frequency 
  */
 function containsFrequencyType(frequency) {
+    var frequencyTypes = consolidationTypeEnum.getTypes();
+
     if (!frequency || typeof frequency !== 'string')
         return false;
 
@@ -194,8 +247,9 @@ exports.success = success;
 exports.error = error;
 exports.CONSOLIDATION_TYPES = CONSOLIDATION_TYPES;
 exports.FREQUENCY_TYPES = FREQUENCY_TYPES;
-exports.frequencyTypes = frequencyTypes;
-exports.consolidationTypes = consolidationTypes;
+exports.TARGET_TYPES = TARGET_TYPES;
+exports.TARGET_MARGIN_TYPES = TARGET_MARGIN_TYPES;
+exports.TREND_TYPES = TREND_TYPES;
 exports.containsFrequencyType = containsFrequencyType;
 exports.dateRoundDown = dateRoundDown;
 exports.dateRoundUp = dateRoundUp;
