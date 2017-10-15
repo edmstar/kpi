@@ -16,15 +16,7 @@ class KPIService {
     }
 
     create(data, callback, error) {
-        this.modelKpi.create({
-            name: data.name,
-            format: data.format,
-            consolidationType: data.consolidationType,
-            formula: data.formula,
-            frequency: data.frequency,
-            multipleConsolidationType: data.multipleConsolidationType,
-            target: data.target
-        }).catch(error).then(result => {
+        this.modelKpi.create(data).catch(error).then(result => {
             var errorMessage = (result === null) ? 'KPI not created.' : false;
             callback(result, errorMessage);
         });
@@ -42,13 +34,19 @@ class KPIService {
         }
     }
 
-    addValue(data, callback, error) {
-        this.modelValue.create({
-            date: data.date,
-            value: data.value,
-            weight: 1,
-            id_kpi: data.id_kpi
+    loadValue(id, callback, error) {
+        this.modelValue.findOne({
+            where: {
+                id: id
+            }
         }).catch(error).then(result => {
+            var errorMessage = (result === null) ? 'KPI value not found.' : false;
+            callback(result, errorMessage);
+        });
+    }
+
+    addValue(data, callback, error) {
+        this.modelValue.create(data).catch(error).then(result => {
             var errorMessage = (result === null) ? 'KPI not created.' : false;
             callback(result, errorMessage);
         });

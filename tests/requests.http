@@ -8,7 +8,12 @@ X-Access-Token: :token
 
 ### Load KPI 2
 
-GET :server/kpi/06d48c24-23ee-4b03-95d1-d39322ad16d8
+GET :server/kpi/1216b892-dfd3-451b-b89b-dbaf6b17d9d6
+X-Access-Token: :token
+
+### Load KPI Value
+
+GET :server/kpi/value/1cb04ee95-1ed7-460f-a2d5-613cc58d1bf
 X-Access-Token: :token
 
 ### Insert KPI
@@ -18,16 +23,28 @@ Content-Type: application/json
 X-Access-Token: :token
 
 {
-  "name": "KPIName7",
+  "name": "KPIName1",
   "consolidationType": "mean",
   "frequency": "day",
   "multipleConsolidationType": "sum",
   "target_type": "kpi",
-  "target": "f2828d20-500c-4da0-95e7-706321969f32",
+  "target": "1216b892-dfd3-451b-b89b-dbaf6b17d9d6",
   "target_min_type": "constant",
-  "target": "5",
+  "target_min": "5",
   "target_max_type": "percentage",
-  "target": "1.2"
+  "target_max": "1.2"
+}
+
+### Insert Data Value
+POST :server/kpi/value
+Content-Type: application/json
+X-Access-Token: :token
+
+{
+  "date": "2017-10-15 12:47:50",
+  "value": "5.0",
+  "weight": "1.0",
+  "kpi": "1216b892-dfd3-451b-b89b-dbaf6b17d9d6"
 }
 
 ### Login

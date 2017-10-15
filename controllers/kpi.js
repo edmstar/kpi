@@ -48,17 +48,7 @@ class KPIController extends controller.IController {
                 self.error(res, errors);
             });
 
-            dataServiceKPI.create(req.body
-                // {
-                // name: req.body.name,
-                // format: req.body.format,
-                // consolidationType: req.body.consolidationType,
-                // formula: req.body.formula,
-                // frequency: req.body.frequency,
-                // multipleConsolidationType: req.body.multipleConsolidationType,
-                // target: req.body.target
-                // }
-                , callback, error);
+            dataServiceKPI.create(req.body, callback, error);
         });
 
         this.app.post("/kpi/value", bodyParser.json(), function(req, res) {
@@ -72,11 +62,22 @@ class KPIController extends controller.IController {
                 self.error(res, errors);
             });
 
-            dataServiceKPI.addValue({
-                date: req.body.date,
-                value: req.body.value,
-                weight: req.body.weight || 1.0,
-                id_kpi: req.body.kpi
+            dataServiceKPI.addValue(req.body, callback, error);
+        });
+
+        this.app.get("/kpi/value/:id", bodyParser.json(), function(req, res) {
+            var callback = function(kpiValue, error) {
+                self.error(res, error);
+                res.status(200);
+                res.send(kpiValue);
+            };
+
+            var error = (errors => {
+                self.error(res, errors);
+            });
+
+            dataServiceKPI.loadValue({
+                id: req.params.id
             }, callback, error);
         });
 

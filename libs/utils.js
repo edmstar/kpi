@@ -61,9 +61,9 @@ const TARGET_TYPES_TRANSLATION = {
 };
 
 const TARGET_MARGIN_TYPES = {
-    NONE: null,
-    CONSTANT: 0,
-    KPI: 1,
+    NONE: TARGET_TYPES.NONE,
+    CONSTANT: TARGET_TYPES.CONSTANT,
+    KPI: TARGET_TYPES.KPI,
     PERCENTAGE: 2
 };
 
@@ -86,17 +86,12 @@ const TREND_TYPES_TRANSLATION = {
     DOWN: 'down'
 };
 
-var consolidationTypeEnum = new Enum(CONSOLIDATION_TYPES, CONSOLIDATION_TYPES_TRANSLATION);
-var frequencyTypeEnum = new Enum(FREQUENCY_TYPES, FREQUENCY_TYPES_TRANSLATION);
-var targetTypeEnum = new Enum(TARGET_TYPES, TARGET_TYPES_TRANSLATION);
-var targetMarginTypeEnum = new Enum(TARGET_MARGIN_TYPES, TARGET_MARGIN_TYPES_TRANSLATION);
-var trendTypeEnum = new Enum(TREND_TYPES, TREND_TYPES_TRANSLATION);
+const consolidationTypeEnum = new Enum(CONSOLIDATION_TYPES, CONSOLIDATION_TYPES_TRANSLATION);
+const frequencyTypeEnum = new Enum(FREQUENCY_TYPES, FREQUENCY_TYPES_TRANSLATION);
+const targetTypeEnum = new Enum(TARGET_TYPES, TARGET_TYPES_TRANSLATION);
+const targetMarginTypeEnum = new Enum(TARGET_MARGIN_TYPES, TARGET_MARGIN_TYPES_TRANSLATION);
+const trendTypeEnum = new Enum(TREND_TYPES, TREND_TYPES_TRANSLATION);
 
-exports.consolidationTypeEnum = consolidationTypeEnum;
-exports.frequencyTypeEnum = frequencyTypeEnum;
-exports.targetTypeEnum = targetTypeEnum;
-exports.targetMarginTypeEnum = targetMarginTypeEnum;
-exports.trendTypeEnum = trendTypeEnum;
 
 const SUCCESS = 0;
 const ERROR = 1;
@@ -255,3 +250,8 @@ exports.dateRoundDown = dateRoundDown;
 exports.dateRoundUp = dateRoundUp;
 exports.getDateRange = getDateRange;
 exports.getNextDate = getNextDate;
+exports.consolidationTypeEnum = consolidationTypeEnum;
+exports.frequencyTypeEnum = frequencyTypeEnum;
+exports.targetTypeEnum = targetTypeEnum;
+exports.targetMarginTypeEnum = targetMarginTypeEnum;
+exports.trendTypeEnum = trendTypeEnum;

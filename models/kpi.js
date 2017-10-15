@@ -66,9 +66,10 @@ module.exports = function(sequelize) {
             }
         },
         target_type: {
-            type: Sequelize.DOUBLE,
+            type: Sequelize.ENUM,
             allowNull: true,
-            defaultValue: null
+            defaultValue: utils.TARGET_TYPES.NONE,
+            values: utils.targetTypeEnum.getTypes()
         },
         target: {
             type: Sequelize.DOUBLE,
@@ -79,7 +80,7 @@ module.exports = function(sequelize) {
             type: Sequelize.ENUM,
             allowNull: true,
             defaultValue: utils.TARGET_MARGIN_TYPES.NONE,
-            values: utils.targetTypeEnum.getTypes()
+            values: utils.targetMarginTypeEnum.getTypes()
         },
         target_min: {
             type: Sequelize.DOUBLE,
@@ -96,7 +97,7 @@ module.exports = function(sequelize) {
             type: Sequelize.ENUM,
             allowNull: true,
             defaultValue: utils.TARGET_MARGIN_TYPES.NONE,
-            values: utils.targetTypeEnum.getTypes()
+            values: utils.targetMarginTypeEnum.getTypes()
         },
         target_max: {
             type: Sequelize.DOUBLE,
