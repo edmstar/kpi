@@ -27,6 +27,17 @@ const sequelize = new Sequelize('kpi', 'admin', 'password', {
 
 var models = require('../../models/models.js');
 
+function generateMockArray(results)
+{
+    var values = [];
+    for(var v in results)
+    {
+        var value = results[v];
+        values.push(value);
+    }
+    return values;
+};
+
 /**
  *
  * @param {void} callback
@@ -64,6 +75,7 @@ function populateKPI(callback) {
 
     KPI.bulkCreate(items).then(() => {
         KPI.findAll().then((values) => {
+            exports.mocks.KPI = generateMockArray(values);
             populateKPIValues(values, callback);
         });
     });
@@ -97,10 +109,13 @@ function populateKPIValues(values, callback) {
 
     }
 
-
-    KPI_VALUE.bulkCreate(kpiValues).then(callback);
+    KPI_VALUE.bulkCreate(kpiValues).then((results) => {
+        exports.mocks.KPI_VALUE = generateMockArray(results);
+        callback(results);
+    });
 }
 
+exports.mocks = {};
 exports.populate = function(callback) {
     populateKPI(callback);
 };

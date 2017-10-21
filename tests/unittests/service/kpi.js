@@ -4,6 +4,7 @@ var expect = chai.expect;
 var model = require('../models.js');
 var utils = require('../../../libs/utils.js');
 var constants = require('../constants.js');
+var uuid = require('uuid/v4');
 
 var KPIService = require('../../../libs/service/kpi.js');
 var service = new KPIService(model.sequelize);
@@ -37,8 +38,9 @@ describe('KPIService', function() {
 
     it('Add new KPI with no targets.', function(done) {
         var createSuccessful = function(result, error) {
-            parseCreate(result, error);
-            done();
+            check(done, () => {
+                parseCreate(result, error);
+            });
         };
 
         service.create(constants.kpis.KPI1, createSuccessful, (error) => {
@@ -47,21 +49,53 @@ describe('KPIService', function() {
     });
 
     it('Add new KPI with existing name.', function(done) {
-        var repeat = true;
+        var kpi = JSON.parse(JSON.stringify(constants.kpis.KPI1));
+        kpi.id = uuid();
 
-        var create = function(result, error) {
-            parseCreate(result, error);
-            service.create(constants.kpis.KPI2, (result, error) => {
+        service.create(kpi, (result, error) => {
+            check(done, () => {
                 expect(result).to.null();
                 expect(error).to.equal('KPI not created.');
-            }, (error) => {
-                check(done, () => {
-                    expect(error.name).to.equal('SequelizeUniqueConstraintError');
-                });
             });
-        };
+        }, (error) => {
+            check(done, () => {
+                expect(error.name).to.equal('SequelizeUniqueConstraintError');
+            });
+        });
+    });
 
-        service.create(constants.kpis.KPI2, create, (error) => {
+    it('Add new KPIValue', function(done) {
+        var kpiValue = constants.kpiValues.KPIValue1;
+        service.addValue(kpiValue, (result, error) => {
+            check(done, () => {
+                parseCreate(result, error);
+                expect(result.value).to.equal(kpiValue.value);
+            });
+        }, (error) => {
+            done(error);
+        });
+    });
+
+    it('Load KPI', function(done) {
+        var referenceKpi = model.mocks.KPI[0];
+        service.load(referenceKpi.id, (result, error) => {
+            check(done, () => {
+                expect(result.id).to.equal(referenceKpi.id);
+                expect(result.name).to.equal(referenceKpi.name);
+            });
+        }, (error) => {
+            done(error);
+        });
+    });
+
+    it('Load KPI Value', function(done) {
+        var referenceKpiValue = model.mocks.KPI_VALUE[0];
+        service.loadValue(referenceKpiValue.id, (result, error) => {
+            check(done, () => {
+                expect(result.id).to.equal(referenceKpiValue.id);
+                expect(result.id_kpi).to.equal(referenceKpiValue.id_kpi);
+            });
+        }, (error) => {
             done(error);
         });
     });
