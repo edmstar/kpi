@@ -11,7 +11,7 @@ const sequelize = new Sequelize('kpi', 'admin', 'password', {
     },
   
     // SQLite only
-    storage: '/home/eduardo/node/kpi/database.sqlite',
+    storage: global.appRoot + '/database.sqlite',
 
     define: {
         freezeTableName: true

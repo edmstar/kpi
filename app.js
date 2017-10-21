@@ -4,6 +4,8 @@ var mController = require('./controllers/icontroller.js');
 var path = require('path');
 var express = require('express');
 
+global.appRoot = path.resolve(__dirname);
+
 var models = require('./models/models.js');
 var sequelize = models.sequelize;
 
@@ -11,7 +13,6 @@ var sequelize = models.sequelize;
 if (argparse.database)
     models.sequelize.sync({ force: true });
 
-global.appRoot = path.resolve(__dirname);
 var app = express();
 
 app.sequelize = sequelize;
