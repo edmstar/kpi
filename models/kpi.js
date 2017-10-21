@@ -6,6 +6,8 @@ const ERROR_VALIDATION_MULTIPLE_CONSOLIDATION_FREQUENCY = "It is not possible to
 const ERROR_VALIDATION_NO_MULTIPLE_CONSOLIDATION_WHEN_WEIGHTED = "It is not possible to set a consolidation for multiple values since the consolidation is weighted.";
 const ERROR_TARGET_MARGIN_KPI_NULL = "Margin KPI not selected.";
 const ERROR_TARGET_MARGIN_CONSTANT_NULL = "Margin value not specified.";
+const ERROR_TARGET_KPI_NULL = "KPI not selected.";
+const ERROR_MARGIN_CONSTANT_NULL = "Value not specified.";
 
 module.exports = function(sequelize) {
     if (sequelize.isDefined(TABLE_NAME))

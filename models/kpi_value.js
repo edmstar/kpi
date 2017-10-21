@@ -1,4 +1,5 @@
 var Sequelize = require('sequelize');
+var Op = Sequelize.Op;
 const tableName = 'KPI_VALUE';
 
 module.exports = function(sequelize) {
@@ -53,9 +54,9 @@ module.exports = function(sequelize) {
                 as: 'kpiValues',
                 where: {
                     date: {
-                        $and: {
-                            $gte: start,
-                            $lte: end
+                        [Op.and]: {
+                            [Op.gte]: start,
+                            [Op.lte]: end
                         }
                     }
                 },

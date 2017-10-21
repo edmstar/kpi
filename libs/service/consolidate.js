@@ -30,7 +30,7 @@ class ConsolidateService {
      * @param {string} consolidation
      */
     consolidateMultiple(values, frequency, consolidation) {
-        var containsFT = utils.containsFrequencyType(frequency);
+        var containsFT = utils.frequencyTypeEnum.containsValue(frequency);
         if (!frequency || !values || !containsFT)
             return [];
 
@@ -76,19 +76,19 @@ class ConsolidateService {
         if (!values)
             return null;
 
-        switch (consolidation) {
-            case 'mean':
+        switch (parseInt(consolidation)) {
+            case utils.CONSOLIDATION_TYPES.MEAN:
                 return this.calculateMean(values);
-            case 'weighted':
+            case utils.CONSOLIDATION_TYPES.WEIGHTED:
                 return this.calculateWeighted(values);
-            case 'sum':
+            case utils.CONSOLIDATION_TYPES.SUM:
                 return this.calculateSum(values);
-            case 'min':
+            case utils.CONSOLIDATION_TYPES.MIN:
                 return this.calculateMin(values);
-            case 'max':
+            case utils.CONSOLIDATION_TYPES.MAX:
                 return this.calculateMax(values);
         }
-        return result;
+        return null;
     }
 
     /**
@@ -200,9 +200,6 @@ class ConsolidateService {
         var roundedStart = utils.dateRoundDown(start, kpi.frequency);
         var roundedEnd = utils.dateRoundUp(end, kpi.frequency);
 
-        //console.log("Start: " + roundedStart);
-        //console.log("End: " + roundedEnd);
-
         if (kpi.frequency == null) {
             kpi.getPeriod(start, end, callback);
             return;
@@ -211,9 +208,6 @@ class ConsolidateService {
         var dates = utils.getDateRange(roundedStart, roundedEnd, kpi.frequency);
 
         var getValuesCallback = (function(kpiValues) {
-            //console.log(dates);
-            //console.log(kpiValues);
-
             var aggregatedValues = [];
 
             // aggregate by multipleConsolidation type
@@ -223,15 +217,11 @@ class ConsolidateService {
                 aggregatedValues = kpiValues; //this.consolidateMultiple(kpiValues, kpi.frequency, kpi.consolidationType);
             }
 
-            //console.log(aggregatedValues);
-
             // merge values from empty date array
             var consolidatedValues = this.mergeDateValues(dates, aggregatedValues);
 
-            //console.log(consolidatedValues);
-
             if (callback) callback(consolidatedValues);
-        }).bind(this)
+        }).bind(this);
 
         kpi.getPeriod(start, end, getValuesCallback);
     }
@@ -247,7 +237,7 @@ class ConsolidateService {
 
         var sort = function(a, b) {
             return a.date.getTime() - b.date.getTime();
-        }
+        };
 
         var values = empty.slice().sort(sort);
         var dataValues = data.slice().sort(sort);

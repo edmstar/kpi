@@ -113,57 +113,39 @@ function error(e) {
 }
 
 /**
- * Verifies if frequency type exists
- * @param {string} frequency 
- */
-function containsFrequencyType(frequency) {
-    var frequencyTypes = consolidationTypeEnum.getTypes();
-
-    if (!frequency || typeof frequency !== 'string')
-        return false;
-
-    for (var index in frequencyTypes) {
-        var element = frequencyTypes[index];
-        if (element.toLowerCase() === frequency.toLowerCase())
-            return true;
-    }
-    return false;
-}
-
-/**
  * Adds to current based on type 
  * @param {Date} current Current date
  * @param {string} frequency Type based on frequency
  * @param {integer} count Units of date to be added
  */
 function getNextDate(current, frequency, count = 1) {
-    if (!(current instanceof Date) || (!frequency) || !containsFrequencyType(frequency))
+    if (!(current instanceof Date) || (!frequency) || !frequencyTypeEnum.containsValue(frequency))
         return null;
 
     var newDate = new Date(current);
-    switch (frequency) {
-        case YEAR:
+    switch (parseInt(frequency)) {
+        case FREQUENCY_TYPES.YEAR:
             newDate.setFullYear(newDate.getFullYear() + 1 * count);
             break;
-        case SEMESTER:
+        case FREQUENCY_TYPES.SEMESTER:
             newDate.setMonth(newDate.getMonth() + 6 * count);
             break;
-        case MONTH:
+        case FREQUENCY_TYPES.MONTH:
             newDate.setMonth(newDate.getMonth() + 1 * count);
             break;
-        case WEEK:
+        case FREQUENCY_TYPES.WEEK:
             newDate.setDate(newDate.getDate() + 7 * count);
             break;
-        case DAY:
+        case FREQUENCY_TYPES.DAY:
             newDate.setDate(newDate.getDate() + 1 * count);
             break;
-        case HOUR:
+        case FREQUENCY_TYPES.HOUR:
             newDate.setHours(newDate.getHours() + 1 * count);
             break;
-        case MINUTE:
+        case FREQUENCY_TYPES.MINUTE:
             newDate.setMinutes(newDate.getMinutes() + 1 * count);
             break;
-        case SECONDS:
+        case FREQUENCY_TYPES.SECONDS:
             newDate.setSeconds(newDate.getSeconds() + 1 * count);
             break;
     }
@@ -177,7 +159,7 @@ function getNextDate(current, frequency, count = 1) {
  * @param {string} frequency Type based on frequency
  */
 function getDateRange(start, end, frequency) {
-    if (!(start instanceof Date && end instanceof Date) || (!frequency) || !containsFrequencyType(frequency))
+    if (!(start instanceof Date && end instanceof Date) || (!frequency) || !frequencyTypeEnum.containsValue(frequency))
         return null;
 
     var dateRange = [];
@@ -201,24 +183,24 @@ function getDateRange(start, end, frequency) {
  * @returns {Date}
  */
 function dateRoundDown(current, frequency) {
-    if (!(current instanceof Date) || !containsFrequencyType(frequency))
+    if (!(current instanceof Date) || !frequencyTypeEnum.containsValue(frequency))
         return null;
 
     var newDate = new Date('01/01/1970');
-    switch (frequency) {
-        case SECONDS:
+    switch (parseInt(frequency)) {
+        case FREQUENCY_TYPES.SECONDS:
             newDate.setSeconds(current.getSeconds());
-        case MINUTE:
+        case FREQUENCY_TYPES.MINUTE:
             newDate.setMinutes(current.getMinutes());
-        case HOUR:
+        case FREQUENCY_TYPES.HOUR:
             newDate.setHours(current.getHours());
-        case DAY:
-        case WEEK:
+        case FREQUENCY_TYPES.DAY:
+        case FREQUENCY_TYPES.WEEK:
             newDate.setDate(current.getDate());
-        case MONTH:
+        case FREQUENCY_TYPES.MONTH:
             newDate.setMonth(current.getMonth());
-        case SEMESTER:
-        case YEAR:
+        case FREQUENCY_TYPES.SEMESTER:
+        case FREQUENCY_TYPES.YEAR:
             newDate.setFullYear(current.getFullYear());
     }
 
@@ -226,13 +208,13 @@ function dateRoundDown(current, frequency) {
 }
 
 function dateRoundUp(current, frequency) {
-    if (!(current instanceof Date) || !containsFrequencyType(frequency))
+    if (!(current instanceof Date) || !frequencyTypeEnum.containsValue(frequency))
         return null;
 
     var newDate = dateRoundDown(current, frequency);
     newDate = getNextDate(newDate, frequency);
 
-    if (frequency != SECONDS)
+    if (parseInt(frequency) != FREQUENCY_TYPES.SECONDS)
         newDate.setSeconds(newDate.getSeconds() - 1);
 
     return newDate;
@@ -245,7 +227,6 @@ exports.FREQUENCY_TYPES = FREQUENCY_TYPES;
 exports.TARGET_TYPES = TARGET_TYPES;
 exports.TARGET_MARGIN_TYPES = TARGET_MARGIN_TYPES;
 exports.TREND_TYPES = TREND_TYPES;
-exports.containsFrequencyType = containsFrequencyType;
 exports.dateRoundDown = dateRoundDown;
 exports.dateRoundUp = dateRoundUp;
 exports.getDateRange = getDateRange;

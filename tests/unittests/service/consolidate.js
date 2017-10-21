@@ -107,14 +107,12 @@ describe('ConsolidateService', function() {
     });
 
     it('consolidate(kpi, start, end, callback) should return 100 for KPI with {frequency=day, consolidation=sum, multipleConsolidation=sum}', function(done) {
-
         var name = "KPI|" + utils.CONSOLIDATION_TYPES.SUM + "|" + utils.FREQUENCY_TYPES.DAY;
 
         evaluateKpiConsolidation(name, 100, done);
     });
 
     it('consolidate(kpi, start, end, callback) should return 10 for KPI with {frequency=day, consolidation=mean, multipleConsolidation=sum}', function(done) {
-
         var name = "KPI|" + utils.CONSOLIDATION_TYPES.MEAN + "|" + utils.FREQUENCY_TYPES.DAY;
 
         evaluateKpiConsolidation(name, 10, done);

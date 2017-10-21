@@ -18,6 +18,24 @@ class Enum {
         return this.types;
     }
 
+    containsValue(value) {
+        for (var key in this.enum) {
+            var element = this.enum[key];
+            if (element.value == value)
+                return true;
+        }
+        return false;
+    }
+
+    containsTranslation(translation) {
+        for (var key in this.enum) {
+            var element = this.enum[key];
+            if (element.translation == translation)
+                return true;
+        }
+        return false;
+    }
+
     getValue(translation) {
         for (var key in this.enum) {
             var element = this.enum[key];
@@ -25,7 +43,7 @@ class Enum {
                 return element.value;
             }
         }
-        return null;
+        return undefined;
     }
 
     getTranslation(value) {
@@ -35,7 +53,7 @@ class Enum {
                 return element.translation;
             }
         }
-        return null;
+        return undefined;
     }
 }
 
