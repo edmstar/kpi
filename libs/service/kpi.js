@@ -16,10 +16,10 @@ class KPIService {
     }
 
     create(data, callback, error) {
-        this.modelKpi.create(data).catch(error).then(result => {
+        this.modelKpi.create(data).then(result => {
             var errorMessage = (result === null) ? 'KPI not created.' : false;
             callback(result, errorMessage);
-        });
+        }).catch(error);
     }
 
     populate(data) {
