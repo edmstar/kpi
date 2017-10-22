@@ -7,11 +7,11 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha tests/unittests/service/*.js"
   },
   "repository": {
     "type": "git",
-    "url": "/home/eduardo/gogs-repositories/eduardo/kpi.git"
+    "url": "https://github.com/eduardostarling/kpi.git"
   },
   "author": "",
   "license": "ISC",
