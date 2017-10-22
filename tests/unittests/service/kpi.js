@@ -1,5 +1,6 @@
 var chai = require('chai');
 chai.use(require('chai-uuid'));
+chai.use(require('chai-datetime'));
 var expect = chai.expect;
 var model = require('../models.js');
 var utils = require('../../../libs/utils.js');
@@ -36,7 +37,7 @@ describe('KPIService', function() {
         expect(result.dataValues.id).to.be.a.uuid();
     };
 
-    it('Add new KPI with no targets.', function(done) {
+    it('Add new KPI to database with no targets.', function(done) {
         var createSuccessful = function(result, error) {
             check(done, () => {
                 parseCreate(result, error);
@@ -49,8 +50,10 @@ describe('KPIService', function() {
     });
 
     it('Add new KPI with existing name.', function(done) {
-        var kpi = JSON.parse(JSON.stringify(constants.kpis.KPI1));
+        var kpi = JSON.parse(JSON.stringify(model.mocks.KPI[0].dataValues));
         kpi.id = uuid();
+        delete kpi.createdAt;
+        delete kpi.updatedAt;
 
         service.create(kpi, (result, error) => {
             check(done, () => {
@@ -76,7 +79,7 @@ describe('KPIService', function() {
         });
     });
 
-    it('Load KPI', function(done) {
+    it('Load the first KPI mocked in the database', function(done) {
         var referenceKpi = model.mocks.KPI[0];
         service.load(referenceKpi.id, (result, error) => {
             check(done, () => {
@@ -88,7 +91,7 @@ describe('KPIService', function() {
         });
     });
 
-    it('Load KPI Value', function(done) {
+    it('Load the first KPI Value mocked in the database', function(done) {
         var referenceKpiValue = model.mocks.KPI_VALUE[0];
         service.loadValue(referenceKpiValue.id, (result, error) => {
             check(done, () => {
@@ -97,6 +100,41 @@ describe('KPIService', function() {
             });
         }, (error) => {
             done(error);
+        });
+    });
+
+    it('Load a range of KPI values given by a certain range that is contained by the all the KPI values in the database', function(done) {
+        var referenceKpiValues = [];
+        var referenceKpi = model.mocks.KPI[0];
+
+        // Gets start date 1 day after the first
+        var start = utils.getNextDate(constants.startDate, referenceKpi.frequency, 1);
+        // Gets end date 4 days before the last
+        var end = utils.getNextDate(start, referenceKpi.frequency, constants.days - 4);
+        for (var v in model.mocks.KPI_VALUE) {
+            var value = model.mocks.KPI_VALUE[v];
+            if (value.date >= start && value.date <= end)
+                referenceKpiValues.push(value.dataValues);
+        }
+
+        referenceKpi.getPeriod(start, end, (values) => {
+            check(done, () => {
+                for (var e in values) {
+                    var element = values[e];
+                    var contains = false;
+                    for(var i in referenceKpiValues)
+                    {
+                        var referenceElement = values[i];
+                        if (element.date.getTime() == referenceElement.date.getTime())
+                        {
+                            contains = true;
+                            break;
+                        }
+                    }
+                    // Filtered date must have been found on the reference list
+                    expect(contains).to.equal(true);
+                }
+            });
         });
     });
 });
