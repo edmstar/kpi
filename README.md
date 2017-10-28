@@ -1,7 +1,6 @@
 # KPI
 
-KPI Service
-
+[![Build Status](https://travis-ci.org/eduardostarling/kpi.svg?branch=master)](https://travis-ci.org/eduardostarling/kpi)
 
 ## List of features
 

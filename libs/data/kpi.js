@@ -20,6 +20,16 @@ class KPIData {
         });
     }
 
+    loadByName(data, callback, error) {
+        var serviceCallback = function(kpi) {
+            if (kpi) callback(utils.success(objectMapper(kpi.dataValues, kpiMap.mapFromModel)));
+        };
+
+        this.service.loadByName(data.name, serviceCallback, (errors) => {
+            error(utils.error(errors));
+        });
+    }
+
     create(data, callback, error) {
         var serviceCallback = function(kpi) {
             if (kpi) callback(utils.success(objectMapper(kpi.dataValues, kpiMap.mapFromModel)));

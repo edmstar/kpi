@@ -118,20 +118,33 @@ describe('KPIService', function() {
         }
 
         referenceKpi.getPeriod(start, end, (values) => {
+            var element = null;
+            var referenceElement = null;
+            var contains = false;
             check(done, () => {
                 for (var e in values) {
-                    var element = values[e];
-                    var contains = false;
-                    for(var i in referenceKpiValues)
-                    {
-                        var referenceElement = values[i];
-                        if (element.date.getTime() == referenceElement.date.getTime())
-                        {
+                    element = values[e];
+                    contains = false;
+                    for (var i in referenceKpiValues) {
+                        referenceElement = referenceKpiValues[i];
+                        if (element.date.getTime() == referenceElement.date.getTime()) {
                             contains = true;
                             break;
                         }
                     }
                     // Filtered date must have been found on the reference list
+                    expect(contains).to.equal(true);
+                }
+                for (var r in referenceKpiValues) {
+                    referenceElement = referenceKpiValues[r];
+                    contains = false;
+                    for (var j in values) {
+                        element = values[j];
+                        if (element.date.getTime() == referenceElement.date.getTime()) {
+                            contains = true;
+                            break;
+                        }
+                    }
                     expect(contains).to.equal(true);
                 }
             });

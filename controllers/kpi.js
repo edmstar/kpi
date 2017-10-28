@@ -81,7 +81,7 @@ class KPIController extends controller.IController {
             }, callback, error);
         });
 
-        this.app.get("/kpi/name/:name", bodyParser.json(), function(req, red) {
+        this.app.get("/kpi/name/:name", bodyParser.json(), function(req, res) {
             var callback = function(kpi, error) {
                 self.error(res, error);
                 res.status(200);
@@ -93,7 +93,7 @@ class KPIController extends controller.IController {
             });
 
             dataServiceKPI.loadByName({
-                name: req.body.name
+                name: req.params.name
             }, callback, error);
         });
     }
