@@ -1,9 +1,9 @@
 var utils = require('../../utils.js');
 
+var functionMax = require('./formula/max.js');
+
 const FORMULA_FUNCTIONS = {
-    SUM: {
-        name: 'sum'
-    } //require('formula/sum.js');
+    MAX: functionMax
 };
 
 const SUM = "+";
@@ -33,7 +33,46 @@ class Formula {
     }
 
     parse() {
-        return this.shuntingYard();
+        var postfixStack = this.shuntingYard();
+        var auxStack = [];
+
+        for (var t in postfixStack) {
+            var token = postfixStack[t];
+            var func = null;
+
+            if (!isNaN(token) || this.argumentExp.test(token)) { // search for operands
+                auxStack.push(token);
+            } else { // it is an operator
+                if (this.isOperator(token)) { // perform operation
+                    var rightOperand = auxStack.pop();
+                    var leftOperand = auxStack.pop();
+
+                    auxStack.push(this.performOperation(token, leftOperand, rightOperand));
+                } else if (token == UNARY_MINUS) {
+                    auxStack.push(-parseFloat(auxStack.pop()));
+                } else if ((func = this.getFunction(token)) !== null) { // call function
+                    var formulaFunction = new func();
+                    var parameters = [];
+
+                    for(var p = 0; p < formulaFunction.getParametersCount(); p++) {
+                        parameters.unshift(auxStack.pop()); // adds to the first position
+                    }
+
+                    auxStack.push(formulaFunction.parse(parameters));
+                } else { // something went wrong - operation not detected
+                    throw new Error("Invalid operator " + token + " on postfix expression " + postfixStack);
+                }
+            }
+        }
+
+        if (auxStack.length !== 1)
+            throw new Error("Invalid expression: " + this.formula);
+
+        var result = auxStack.pop();
+        if (isNaN(result))
+            throw new Error("Invalid expression: " + this.formula);
+
+        return result;
     }
 
     shuntingYard() {
@@ -46,6 +85,9 @@ class Formula {
         var lastMatch = null;
 
         var expression = this.formula;
+
+        if (!this.formula)
+            throw new Error("Formula not provided");
 
         while ((token = this.tokenExp.exec(expression)) !== null) {
             if (token.index === this.tokenExp.lastIndex) {
@@ -107,7 +149,7 @@ class Formula {
                             }
                             if (stackElement === LEFT_PARENTHESIS)
                                 operatorStack.push(stackElement);
-                        } else if (this.argumentExp.test(match)) {
+                        } else if (this.argumentExp.test(match)) { // match text between quotes (single and double)
                             outputStream.push(match);
                         } else {
                             throw new Error("Invalid operator: " + match + " on formula " + expression);
@@ -146,6 +188,28 @@ class Formula {
 
     isOperator(element) {
         return element === SUM || element === SUBTRACT || element === MULTIPLY || element === DIVIDE || element === MODULE || element === EXPONENTIAL;
+    }
+
+    performOperation(element, leftOperand, rightOperand) {
+        if (!this.isOperator(element))
+            throw new Error(leftOperand + " " + element + " " + rightOperand + " is not a valid operation!");
+
+        switch (element) {
+            case SUM:
+                return parseFloat(leftOperand) + parseFloat(rightOperand);
+            case SUBTRACT:
+                return parseFloat(leftOperand) - parseFloat(rightOperand);
+            case MULTIPLY:
+                return parseFloat(leftOperand) * parseFloat(rightOperand);
+            case DIVIDE:
+                return parseFloat(leftOperand) / parseFloat(rightOperand);
+            case EXPONENTIAL:
+                return parseFloat(leftOperand) ** parseFloat(rightOperand);
+            case MODULE:
+                return parseFloat(leftOperand) % parseFloat(rightOperand);
+        }
+
+        return null;
     }
 
     getFunction(element) {

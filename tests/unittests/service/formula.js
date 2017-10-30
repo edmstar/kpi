@@ -15,6 +15,7 @@ describe('Formula', function() {
         f.setFormula("2*(1+2+(3-4*(1+1)))+4");
         var stack = f.shuntingYard();
         var expected = [2, 1, 2, '+', 3, 4, 1, 1, '+', '*', '-', '+', '*', 4, '+'];
+        expect(f.parse()).to.equal(0);
     });
 
     it('Formula -(-5)+1*(-1+5*(1^12))+2+3 should return correct postfix output and resulting value should be 14', function() {
@@ -23,6 +24,7 @@ describe('Formula', function() {
         var stack = f.shuntingYard();
         var expected = [5, '_', '_', 1, 1, '_', 5, 1, 12, '^', '*', '+', '*', '+', 2, '+', 3, '+'];
         expect(stack).to.deep.equal(expected);
+        expect(f.parse()).to.equal(14);
     });
 
     it('Formula 1+2^(+1.5*2+2) should return correct postfix output and resulting value should be 33', function() {
@@ -31,6 +33,7 @@ describe('Formula', function() {
         var stack = f.shuntingYard();
         var expected = [1, 2, 1.5, 2, '*', 2, '+', '^', '+'];
         expect(stack).to.deep.equal(expected);
+        expect(f.parse()).to.equal(33);
     });
 
     it('Formula 10/-1*-2 should return correct postfix output and resulting value should be 20', function() {
@@ -39,21 +42,23 @@ describe('Formula', function() {
         var stack = f.shuntingYard();
         var expected = [10, 1, '_', '/', 2, '_', '*'];
         expect(stack).to.deep.equal(expected);
+        expect(f.parse()).to.equal(20);
     });
 
-    it('Formula 1+SUM(25,2) should correctly parse function', function() {
+    it('Formula 1+MAX(25,2) should return correct postfix output, parse function MAX and return result 26', function() {
         var f = new Formula(null);
-        f.setFormula("1+SUM(25,2)");
+        f.setFormula("1+MAX(25,2)");
         var stack = f.shuntingYard();
-        var expected = [1, 25, 2, 'SUM', '+'];
+        var expected = [1, 25, 2, 'MAX', '+'];
         expect(stack).to.deep.equal(expected);
+        expect(f.parse()).to.equal(26);
     });
 
-    it('Formula 1+SUM(-(25-3*5),5*SUM(2,\"element2\")^7)%2 should correctly parse function', function() {
+    it('Formula 1+MAX(-(25-3*5),5*MAX(2,\"element2\")^7)%2 should return correct postfix output', function() {
         var f = new Formula(null);
-        f.setFormula("1+SUM(-(25-3*5),5*SUM(2,\"element2\")^7)%2");
+        f.setFormula("1+MAX(-(25-3*5),5*MAX(2,\"element2\")^7)%2");
         var stack = f.shuntingYard();
-        var expected = [1, 25, 3, 5, '*', '-', '_', 5, 2, '"element2"', 'SUM', 7, '^', '*', 'SUM', 2, '%', '+'];
+        var expected = [1, 25, 3, 5, '*', '-', '_', 5, 2, '"element2"', 'MAX', 7, '^', '*', 'MAX', 2, '%', '+'];
         expect(stack).to.deep.equal(expected);
     });
 });
