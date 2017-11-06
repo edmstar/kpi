@@ -4,6 +4,10 @@
 
 var Enum = require('./enum.js');
 
+// assumption: higher values mean higher frequencies
+// which, by definition, mean shorter periods. e.g: 1 second occurs
+// more frequently then 1 minute since 1 second is smaller then 1 minute
+// thus, for extra frequencies, assign values accordingly
 const FREQUENCY_TYPES = {
     NONE: null,
     YEAR: 0,
@@ -119,7 +123,7 @@ function error(e) {
  * @param {integer} count Units of date to be added
  */
 function getNextDate(current, frequency, count = 1) {
-    if (!(current instanceof Date) || (!frequency) || !frequencyTypeEnum.containsValue(frequency))
+    if (!(current instanceof Date) || (isNaN(frequency)) || !frequencyTypeEnum.containsValue(frequency))
         return null;
 
     var newDate = new Date(current);
@@ -153,24 +157,35 @@ function getNextDate(current, frequency, count = 1) {
     return newDate;
 }
 
+function getBeforeNextDate(current, frequency, count) {
+    var next = getNextDate(current, frequency, count);
+    next.setSeconds(next.getSeconds() - 1);
+
+    return next;
+}
 /**
  * @param {Date} start Start date
  * @param {Date} end End date
  * @param {string} frequency Type based on frequency
  */
 function getDateRange(start, end, frequency) {
-    if (!(start instanceof Date && end instanceof Date) || (!frequency) || !frequencyTypeEnum.containsValue(frequency))
+    if (!(start instanceof Date && end instanceof Date) || (isNaN(frequency)) || !frequencyTypeEnum.containsValue(frequency))
         return null;
 
     var dateRange = [];
     var currentDate = new Date(start);
 
     while (currentDate <= end) {
-        dateRange.push({
-            date: currentDate,
-            value: null
-        });
+        var datePeriod = {
+            start: currentDate,
+            end: getBeforeNextDate(currentDate, frequency),
+            value: null,
+            weight: null
+        };
         currentDate = getNextDate(currentDate, frequency);
+        if (datePeriod.end > end)
+            datePeriod.end = end;
+        dateRange.push(datePeriod);
     }
 
     return dateRange;
@@ -183,10 +198,10 @@ function getDateRange(start, end, frequency) {
  * @returns {Date}
  */
 function dateRoundDown(current, frequency) {
-    if (!(current instanceof Date) || !frequencyTypeEnum.containsValue(frequency))
+    if (!(current instanceof Date) || !frequency || !frequencyTypeEnum.containsValue(frequency))
         return null;
 
-    var newDate = new Date('01/01/1970');
+    var newDate = new Date('01/01/1970 00:00:00 +00:00');
     switch (parseInt(frequency)) {
         case FREQUENCY_TYPES.SECONDS:
             newDate.setSeconds(current.getSeconds());
@@ -208,7 +223,7 @@ function dateRoundDown(current, frequency) {
 }
 
 function dateRoundUp(current, frequency) {
-    if (!(current instanceof Date) || !frequencyTypeEnum.containsValue(frequency))
+    if (!(current instanceof Date) || !frequency || !frequencyTypeEnum.containsValue(frequency))
         return null;
 
     var newDate = dateRoundDown(current, frequency);
@@ -231,6 +246,7 @@ exports.dateRoundDown = dateRoundDown;
 exports.dateRoundUp = dateRoundUp;
 exports.getDateRange = getDateRange;
 exports.getNextDate = getNextDate;
+exports.getBeforeNextDate = getBeforeNextDate;
 exports.consolidationTypeEnum = consolidationTypeEnum;
 exports.frequencyTypeEnum = frequencyTypeEnum;
 exports.targetTypeEnum = targetTypeEnum;

@@ -1,4 +1,4 @@
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
 var jwt = require('jwt-simple');
 
 var controller = require('./icontroller.js');
@@ -20,7 +20,7 @@ class AuthenticationController extends controller.IController
 
     deny(res)
     {
-        res.status(401)
+        res.status(401);
         res.json({
             "status": 401,
             "message": "Invalid token or key."
@@ -29,7 +29,7 @@ class AuthenticationController extends controller.IController
 
     expire(res)
     {
-        res.status(401)
+        res.status(401);
         res.json({
             "status": 401,
             "message": "Token expired. Please log in again."
@@ -45,7 +45,7 @@ class AuthenticationController extends controller.IController
             this.deny(res);
             return;
         }
-        
+
         try
         {
             var data = jwt.decode(token, this.secret());
@@ -56,7 +56,8 @@ class AuthenticationController extends controller.IController
             return;
         }
 
-        if (data.expire < Date.now())
+        var lastLogin = new Date(data.expire);
+        if (lastLogin.getTime() < Date.now())
         {
             this.expire(res);
             return;
@@ -72,7 +73,7 @@ class AuthenticationController extends controller.IController
 
         res.send({
             token: jwt.encode({
-                expire: expires,
+                expire: expires.getTime(),
                 login: req.body.login || ''
             }, this.secret())
         });

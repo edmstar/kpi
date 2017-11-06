@@ -1,4 +1,4 @@
-:token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHBpcmUiOiIyMDE3LTEwLTA0VDE4OjUzOjQ3LjE5MFoiLCJsb2dpbiI6IiJ9.dWASrT2e4zQV3-QDDJ9hY7u9kjmbCcU8zghRpwQXXVw
+:token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHBpcmUiOjE1MTAwODA1NDI2NTcsImxvZ2luIjoiIn0.d5V3WsR9m1vqIAmP4uhZTfKNYs8Z3f4l3HaWPiWtUa4
 :server = http://localhost:8080
 
 ### Load KPI

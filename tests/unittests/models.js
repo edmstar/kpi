@@ -4,6 +4,7 @@ var constants = require('./constants.js');
 var path = require('path');
 
 const appRoot = path.resolve(__dirname);
+process.env.TZ = 'Etc/UTC';
 
 const sequelize = new Sequelize('kpi', 'admin', 'password', {
     host: 'localhost',
@@ -100,7 +101,7 @@ function populateKPIValues(values, callback) {
             for (var i = 0; i < constants.size; i++) {
                 kpiValues.push({
                     id_kpi: kpi.id,
-                    date: dateItem.date,
+                    date: dateItem.start,
                     value: 1.0,
                     weight: 1.0
                 });
@@ -108,7 +109,6 @@ function populateKPIValues(values, callback) {
         }
 
     }
-
     KPI_VALUE.bulkCreate(kpiValues).then((results) => {
         exports.mocks.KPI_VALUE = generateMockArray(results);
         callback(results);

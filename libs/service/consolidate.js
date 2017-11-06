@@ -2,7 +2,7 @@ var utils = require('../utils.js');
 
 class ConsolidateService {
     constructor(sequelize) {
-
+        this.sequelize = sequelize;
     }
 
     /**
@@ -29,42 +29,36 @@ class ConsolidateService {
      * @param {string} frequency
      * @param {string} consolidation
      */
-    consolidateMultiple(values, frequency, consolidation) {
+    consolidateMultiple(values, start, end, frequency, consolidation) {
         var containsFT = utils.frequencyTypeEnum.containsValue(frequency);
-        if (!frequency || !values || !containsFT)
+        if (isNaN(frequency) || !values || !containsFT)
             return [];
 
-        var mappedValues = new Map();
-        for (var index in values) {
-            var value = values[index];
-            var referenceDate = utils.dateRoundDown(value.date, frequency);
-            var dateValue = mappedValues.get(referenceDate.getTime());
-            if (!dateValue) {
-                dateValue = {
-                    date: referenceDate,
-                    values: [],
-                    weights: []
-                };
-                mappedValues.set(referenceDate.getTime(), dateValue);
+        var periods = utils.getDateRange(start, end, frequency);
+        periods.forEach(function(period) {
+            period.values = [];
+        });
+
+        for (var v in values) {
+            var value = values[v];
+            for (var p in periods) {
+                var period = periods[p];
+                var referenceDate = value.date ? value.date : value.start;
+                if (period.start.getTime() <= referenceDate.getTime() && period.end.getTime() >= referenceDate.getTime()) {
+                    period.values.push({
+                        value: value.value
+                    });
+                    break;
+                }
             }
-            dateValue.values.push({
-                date: dateValue.date,
-                value: value.value,
-                weight: value.weight
-            });
         }
 
-        var consolidatedValues = [];
-
-        mappedValues.forEach((function(mappedValue) {
-            var consolidationData = [];
-            consolidatedValues.push({
-                date: mappedValue.date,
-                value: this.consolidateValues(mappedValue.values, consolidation)
-            });
+        periods.forEach((function(period) {
+            period.value = this.consolidateValues(period.values, consolidation);
+            delete period.values;
         }).bind(this));
 
-        return consolidatedValues;
+        return periods;
     }
 
     /**
@@ -118,16 +112,18 @@ class ConsolidateService {
 
         var sum = 0.0;
         var sumWeights = 0.0;
+        var hasValue = false;
 
         for (var index in values) {
             var kpivalue = values[index];
-            if (kpivalue.value) {
+            if (!isNaN(kpivalue.value)) {
+                hasValue = true;
                 sum += kpivalue.value * kpivalue.weight;
                 sumWeights += kpivalue.weight;
             }
         }
 
-        return sum / sumWeights;
+        return hasValue ? sum / sumWeights : null;
     }
 
     /**
@@ -138,14 +134,17 @@ class ConsolidateService {
         if (!values || !values.length)
             return null;
 
+        var hasValue = false;
         var sum = 0.0;
         for (var index in values) {
             var kpivalue = values[index];
-            if (kpivalue.value)
+            if (kpivalue.value) {
                 sum += kpivalue.value;
+                hasValue = true;
+            }
         }
 
-        return sum;
+        return hasValue ? sum : null;
     }
 
     /**
@@ -157,13 +156,18 @@ class ConsolidateService {
             return null;
 
         var min = values[0].value;
+        var hasValue = !isNaN(min);
+
         for (var index in values) {
             var kpivalue = values[index];
-            if (kpivalue.value && kpivalue.value < min)
-                min = kpivalue.value;
+            if (!isNaN(kpivalue.value)) {
+                hasValue = true;
+                if (kpivalue.value < min)
+                    min = kpivalue.value;
+            }
         }
 
-        return min;
+        return hasValue ? min : null;
     }
 
     /**
@@ -175,13 +179,66 @@ class ConsolidateService {
             return null;
 
         var max = values[0].value;
+        var hasValue = !isNaN(max);
+
         for (var index in values) {
             var kpivalue = values[index];
-            if (kpivalue.value && kpivalue.value > max)
-                max = kpivalue.value;
+            if (!isNaN(kpivalue.value)) {
+                hasValue = true;
+                if (kpivalue.value > max)
+                    max = kpivalue.value;
+            }
         }
 
-        return max;
+        return hasValue ? max : null;
+    }
+
+
+    /**
+     * KPI object where values will be extracted
+     * @param {KPI} kpi
+     * @param {Date} start
+     * @param {Date} end
+     * @param {utils.FREQUENCY_TYPES} frequency
+     * @param {utils.FREQUENCY_TYPES} multipleConsolidation
+     * @param {void} callback
+     */
+    getElementsInPeriodByFrequency(kpi, start, end, frequency, multipleConsolidation, callback) {
+        if (!kpi) {
+            if (callback) callback(null);
+            return;
+        }
+
+        var roundedStart = start; //utils.dateRoundDown(start, frequency);
+        var roundedEnd = end; //utils.dateRoundUp(end, frequency);
+
+        if (frequency == null) {
+            kpi.getPeriod(start, end, callback);
+            return;
+        }
+
+        var dates = utils.getDateRange(roundedStart, roundedEnd, frequency);
+        var getValuesCallback = (function(kpiValues) {
+            var aggregatedValues = [];
+
+            // aggregate by multipleConsolidation type
+            if (multipleConsolidation) {
+                aggregatedValues = this.consolidateMultiple(kpiValues, start, end, frequency, multipleConsolidation);
+
+                if (aggregatedValues.length > 0) {
+                    aggregatedValues[0].start = start;
+                    aggregatedValues[aggregatedValues.length - 1].end = end;
+                }
+            } else {
+                aggregatedValues = kpiValues; //this.consolidateMultiple(kpiValues, frequency, kpi.consolidationType);
+            }
+
+            // merge values from empty date array
+            var consolidatedValues = this.mergeDateValues(dates, aggregatedValues);
+            if (callback) callback(consolidatedValues);
+        }).bind(this);
+
+        kpi.getPeriod(start, end, getValuesCallback);
     }
 
     /**
@@ -192,38 +249,7 @@ class ConsolidateService {
      * @param {void} callback 
      */
     getElementsInPeriod(kpi, start, end, callback) {
-        if (!kpi) {
-            if (callback) callback(null);
-            return;
-        }
-
-        var roundedStart = utils.dateRoundDown(start, kpi.frequency);
-        var roundedEnd = utils.dateRoundUp(end, kpi.frequency);
-
-        if (kpi.frequency == null) {
-            kpi.getPeriod(start, end, callback);
-            return;
-        }
-
-        var dates = utils.getDateRange(roundedStart, roundedEnd, kpi.frequency);
-
-        var getValuesCallback = (function(kpiValues) {
-            var aggregatedValues = [];
-
-            // aggregate by multipleConsolidation type
-            if (kpi.multipleConsolidationType) {
-                aggregatedValues = this.consolidateMultiple(kpiValues, kpi.frequency, kpi.multipleConsolidationType);
-            } else {
-                aggregatedValues = kpiValues; //this.consolidateMultiple(kpiValues, kpi.frequency, kpi.consolidationType);
-            }
-
-            // merge values from empty date array
-            var consolidatedValues = this.mergeDateValues(dates, aggregatedValues);
-
-            if (callback) callback(consolidatedValues);
-        }).bind(this);
-
-        kpi.getPeriod(start, end, getValuesCallback);
+        this.getElementsInPeriodByFrequency(kpi, start, end, kpi.frequency, kpi.multipleConsolidationType, callback);
     }
 
     /**
@@ -236,7 +262,7 @@ class ConsolidateService {
             return null;
 
         var sort = function(a, b) {
-            return a.date.getTime() - b.date.getTime();
+            return a.start.getTime() - b.start.getTime();
         };
 
         var values = empty.slice().sort(sort);
@@ -250,18 +276,20 @@ class ConsolidateService {
             // list is ordered, so we must continue from last insertion
             for (; currentPosition < values.length; currentPosition++) {
                 var element = values[currentPosition];
-                if (element.date.getTime() === value.date.getTime()) {
+                if (element.start.getTime() == value.start.getTime() && element.end.getTime() == value.end.getTime()) {
                     values.splice(currentPosition, 1, {
-                        date: value.date,
+                        start: value.start,
+                        end: value.end,
                         value: value.value,
                         weight: value.weight
                     });
                     currentPosition++;
                     inserted = true;
                     break;
-                } else if (element.date.getTime() > value.date.getTime()) {
+                } else if (element.start.getTime() > value.start.getTime()) {
                     values.splice(currentPosition, 0, {
-                        date: value.date,
+                        start: value.start,
+                        end: value.end,
                         value: value.value,
                         weight: value.weight
                     });

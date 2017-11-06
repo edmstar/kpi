@@ -19,7 +19,7 @@ describe('ConsolidateService', function() {
 
 
     it('consolidateValues(values, consolidation) should return the consolidated value based on consolidation type provided', function() {
-        var startDate = new Date('2000-01-01T00:00:00Z');
+        var startDate = new Date('01/01/2000 00:00:00 +00:00');
         var data = [{
                 date: startDate,
                 value: 2.0,
@@ -50,49 +50,53 @@ describe('ConsolidateService', function() {
     });
 
     it('mergeDateValues(empty, data) should return 5 dates with values and 2 dates without values ordered by date ascending', function() {
-        var start = new Date('2010-10-04T00:00:00Z');
-        var end = utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 4);
+        var start = new Date('10/04/2010 00:00:00 +00:00');
+        var end = utils.dateRoundUp(utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 4), utils.FREQUENCY_TYPES.DAY);
         var empty = utils.getDateRange(start, end, utils.FREQUENCY_TYPES.DAY);
         var data = [{
-                date: start,
+                start: start,
+                end: utils.dateRoundUp(start, utils.FREQUENCY_TYPES.DAY),
                 value: 1.0,
                 weight: 1.0
             },
             {
-                date: utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, -1),
+                start: utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, -1),
+                end: utils.dateRoundUp(utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, -1), utils.FREQUENCY_TYPES.DAY),
                 value: 1.0,
                 weight: 1.0
             },
             {
-                date: utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 4),
+                start: utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 4),
+                end: utils.dateRoundUp(utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 4), utils.FREQUENCY_TYPES.DAY),
                 value: 1.0,
                 weight: 1.0
             },
             {
-                date: utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 2),
+                start: utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 2),
+                end: utils.dateRoundUp(utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 2), utils.FREQUENCY_TYPES.DAY),
                 value: 1.0,
                 weight: 1.0
             },
             {
-                date: utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 6),
+                start: utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 6),
+                end: utils.dateRoundUp(utils.getNextDate(start, utils.FREQUENCY_TYPES.DAY, 6), utils.FREQUENCY_TYPES.DAY),
                 value: 1.0,
                 weight: 1.0
             }
         ];
-
         var dates = consolidate.mergeDateValues(empty, data);
-
         // Check lenght
         expect(dates).to.have.length(7);
 
-        for (var index = 1; index < dates.length; index++) {
+        var index;
+        for (index = 1; index < dates.length; index++) {
             // Check if ordering is ascending
-            expect(dates[index].date).to.afterDate(dates[index - 1].date);
+            expect(dates[index].start).to.afterDate(dates[index - 1].start);
         }
 
         var countValues = 0;
         var countWeight = 0;
-        for (var index in dates) {
+        for (index in dates) {
             var date = dates[index];
             if (date.value)
                 countValues++;
@@ -106,11 +110,11 @@ describe('ConsolidateService', function() {
 
     });
 
-    it('consolidate(kpi, start, end, callback) should return 100 for KPI with {frequency=day, consolidation=sum, multipleConsolidation=sum}', function(done) {
-        var name = "KPI|" + utils.CONSOLIDATION_TYPES.SUM + "|" + utils.FREQUENCY_TYPES.DAY;
+   it('consolidate(kpi, start, end, callback) should return 100 for KPI with {frequency=day, consolidation=sum, multipleConsolidation=sum}', function(done) {
+       var name = "KPI|" + utils.CONSOLIDATION_TYPES.SUM + "|" + utils.FREQUENCY_TYPES.DAY;
 
-        evaluateKpiConsolidation(name, 100, done);
-    });
+       evaluateKpiConsolidation(name, 100, done);
+   });
 
     it('consolidate(kpi, start, end, callback) should return 10 for KPI with {frequency=day, consolidation=mean, multipleConsolidation=sum}', function(done) {
         var name = "KPI|" + utils.CONSOLIDATION_TYPES.MEAN + "|" + utils.FREQUENCY_TYPES.DAY;
