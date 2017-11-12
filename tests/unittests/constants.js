@@ -39,13 +39,53 @@ var KPI2 = {
     target_max_kpi: null
 };
 
+var TargetKPI1 = {
+    id: uuid(),
+    name: "TargetKPI1",
+    format: null,
+    consolidationType: utils.CONSOLIDATION_TYPES.SUM,
+    formula: null,
+    frequency: utils.FREQUENCY_TYPES.DAY,
+    multipleConsolidationType: utils.CONSOLIDATION_TYPES.SUM,
+    target_type: utils.TARGET_TYPES.NONE,
+    target: null,
+    target_min_type: utils.TARGET_MARGIN_TYPES.NONE,
+    target_min: null,
+    target_max_type: utils.TARGET_MARGIN_TYPES.NONE,
+    target_max: null,
+    target_kpi: null,
+    target_min_kpi: null,
+    target_max_kpi: null
+};
+
+var KPI3 = {
+    id: uuid(),
+    name: "KPI3",
+    format: null,
+    consolidationType: utils.CONSOLIDATION_TYPES.SUM,
+    formula: null,
+    frequency: utils.FREQUENCY_TYPES.DAY,
+    multipleConsolidationType: utils.CONSOLIDATION_TYPES.SUM,
+    target_type: utils.TARGET_TYPES.KPI,
+    target: null,
+    target_min_type: utils.TARGET_MARGIN_TYPES.NONE,
+    target_min: null,
+    target_max_type: utils.TARGET_MARGIN_TYPES.NONE,
+    target_max: null,
+    target_kpi: TargetKPI1.id,
+    target_min_kpi: null,
+    target_max_kpi: null
+};
+
 module.exports = {
     startDate: new Date('01/01/2000 00:00:00 +00:00'),
     days: 10,
     size: 10,
     kpis: {
         KPI1: KPI1,
-        KPI2: KPI2
+        KPI2: KPI2,
+        TargetKPI1: TargetKPI1,
+        KPI3: KPI3
     },
     kpiValues: {
         KPIValue1: {

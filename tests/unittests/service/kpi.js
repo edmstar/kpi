@@ -4,6 +4,7 @@ chai.use(require('chai-datetime'));
 var expect = chai.expect;
 var model = require('../models.js');
 var utils = require('../../../libs/utils.js');
+var testutils = require('../../testutils.js');
 var constants = require('../constants.js');
 var uuid = require('uuid/v4');
 
@@ -22,15 +23,6 @@ describe('KPIService', function() {
         });
     });
 
-    function check(done, f) {
-        try {
-            f();
-            done();
-        } catch (e) {
-            done(e);
-        }
-    }
-
     var parseCreate = function(result, error) {
         expect(result).to.not.equal(null);
         expect(error).to.equals(false);
@@ -39,8 +31,9 @@ describe('KPIService', function() {
 
     it('Add new KPI to database with no targets.', function(done) {
         var createSuccessful = function(result, error) {
-            check(done, () => {
+            testutils.check(done, () => {
                 parseCreate(result, error);
+                done();
             });
         };
 
@@ -56,13 +49,15 @@ describe('KPIService', function() {
         delete kpi.updatedAt;
 
         service.create(kpi, (result, error) => {
-            check(done, () => {
+            testutils.check(done, () => {
                 expect(result).to.null();
                 expect(error).to.equal('KPI not created.');
+                done();
             });
         }, (error) => {
-            check(done, () => {
+            testutils.check(done, () => {
                 expect(error.name).to.equal('SequelizeUniqueConstraintError');
+                done();
             });
         });
     });
@@ -70,9 +65,10 @@ describe('KPIService', function() {
     it('Add new KPIValue', function(done) {
         var kpiValue = constants.kpiValues.KPIValue1;
         service.addValue(kpiValue, (result, error) => {
-            check(done, () => {
+            testutils.check(done, () => {
                 parseCreate(result, error);
                 expect(result.value).to.equal(kpiValue.value);
+                done();
             });
         }, (error) => {
             done(error);
@@ -82,9 +78,10 @@ describe('KPIService', function() {
     it('Load the first KPI mocked in the database', function(done) {
         var referenceKpi = model.mocks.KPI[0];
         service.load(referenceKpi.id, (result, error) => {
-            check(done, () => {
+            testutils.check(done, () => {
                 expect(result.id).to.equal(referenceKpi.id);
                 expect(result.name).to.equal(referenceKpi.name);
+                done();
             });
         }, (error) => {
             done(error);
@@ -94,9 +91,10 @@ describe('KPIService', function() {
     it('Load the first KPI Value mocked in the database', function(done) {
         var referenceKpiValue = model.mocks.KPI_VALUE[0];
         service.loadValue(referenceKpiValue.id, (result, error) => {
-            check(done, () => {
+            testutils.check(done, () => {
                 expect(result.id).to.equal(referenceKpiValue.id);
                 expect(result.id_kpi).to.equal(referenceKpiValue.id_kpi);
+                done();
             });
         }, (error) => {
             done(error);
@@ -121,7 +119,7 @@ describe('KPIService', function() {
             var element = null;
             var referenceElement = null;
             var contains = false;
-            check(done, () => {
+            testutils.check(done, () => {
                 for (var e in values) {
                     element = values[e];
                     contains = false;
@@ -147,6 +145,7 @@ describe('KPIService', function() {
                     }
                     expect(contains).to.equal(true);
                 }
+                done();
             });
         });
     });

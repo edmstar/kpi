@@ -94,8 +94,8 @@ function populateKPIValues(values, callback) {
     for (var v in values) {
         var kpi = values[v];
         var start = constants.startDate;
-        var end = utils.getNextDate(start, kpi.dataValues.frequency, constants.days - 1);
-        var dateRange = utils.getDateRange(start, end, kpi.dataValues.frequency);
+        var end = utils.getNextDate(start, kpi.frequency, constants.days - 1);
+        var dateRange = utils.getDateRange(start, end, kpi.frequency);
         for (var d in dateRange) {
             var dateItem = dateRange[d];
             for (var i = 0; i < constants.size; i++) {
@@ -119,6 +119,8 @@ exports.mocks = {};
 exports.populate = function(callback) {
     populateKPI(callback);
 };
+
+exports.populateKPIValues = populateKPIValues;
 
 exports.sequelize = sequelize;
 exports.resetModels = function(callback) {
