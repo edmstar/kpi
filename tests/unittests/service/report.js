@@ -32,7 +32,6 @@ describe('ReportService', function() {
                 end: utils.getBeforeNextDate(referenceDate, utils.FREQUENCY_TYPES.MONTH, 3),
                 frequency: utils.FREQUENCY_TYPES.MONTH
             }, function(result) {
-                console.log(result);
                 done();
             });
         };
