@@ -44,9 +44,10 @@ class RoutesController
 exports.getRoutesObject = function(app)
 {
     var routes = new RoutesController(app);
-    
+
     routes.addController(require('./authentication.js').AuthenticationController);
-    routes.addController(require('./kpi.js').KPIController)
+    routes.addController(require('./kpi.js').KPIController);
+    routes.addController(require('./report.js').ReportController);
 
     return routes;
 };

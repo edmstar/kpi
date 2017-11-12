@@ -11,6 +11,22 @@ class ReportService {
     }
 
     getKpiReport(options, callback) {
+
+        if (!options) {
+            callback(null);
+            return;
+        }
+
+        if (!options.kpi && !options.kpiName) {
+            callback(null);
+            return;
+        }
+
+        if (!options.start || !options.end) {
+            callback(null);
+            return;
+        }
+
         var kpiReport = {
             results: null,
             target: null,
@@ -106,9 +122,11 @@ class ReportService {
         if (targetType == utils.TARGET_TYPES.CONSTANT) {
             // generate constant values given kpi's consolidation
             var periods = utils.getDateRange(options.start, options.end, options.kpi.frequency);
-            periods.forEach(function(period) {
+            for(var key in periods)
+            {
+                var period = periods[key];
                 period.value = targetConstant;
-            });
+            }
 
             if (options.kpi.frequency == utils.FREQUENCY_TYPES.NONE) {
                 callback(self.consolidateService.consolidateMultiple(periods, options.start, options.end, options.frequency, options.kpi.consolidationType));
@@ -197,12 +215,14 @@ class ReportService {
 
         // passing a value through options.kpi has higher priority than by name
         // if kpi model is passed, then it should not load it again
-        if (options.kpi instanceof KPIService) {
+        if (options.kpi && options.kpi.id) {
             generateReport();
         } else if (typeof options.kpi === 'string') {
             this.kpiService.load(options.kpi, loadKpi);
         } else if (typeof options.kpiName === 'string') {
             this.kpiService.loadByName(options.kpiName, loadKpi);
+        } else {
+            callback(null);
         }
     }
 

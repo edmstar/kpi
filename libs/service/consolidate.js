@@ -35,9 +35,13 @@ class ConsolidateService {
             return [];
 
         var periods = utils.getDateRange(start, end, frequency);
-        periods.forEach(function(period) {
-            period.values = [];
-        });
+        var key;
+        var periodValue;
+
+        for(key in periods) {
+            periodValue = periods[key];
+            periodValue.values = [];
+        }
 
         for (var v in values) {
             var value = values[v];
@@ -53,10 +57,11 @@ class ConsolidateService {
             }
         }
 
-        periods.forEach((function(period) {
-            period.value = this.consolidateValues(period.values, consolidation);
-            delete period.values;
-        }).bind(this));
+        for(key in periods) {
+            periodValue = periods[key];
+            periodValue.value = this.consolidateValues(periodValue.values, consolidation);
+            delete periodValue.values;
+        }
 
         return periods;
     }
@@ -225,7 +230,7 @@ class ConsolidateService {
             if (multipleConsolidation) {
                 aggregatedValues = this.consolidateMultiple(kpiValues, start, end, frequency, multipleConsolidation);
 
-                if (aggregatedValues.length > 0) {
+                if (aggregatedValues && aggregatedValues.length > 0) {
                     aggregatedValues[0].start = start;
                     aggregatedValues[aggregatedValues.length - 1].end = end;
                 }

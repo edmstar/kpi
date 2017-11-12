@@ -1,4 +1,4 @@
-:token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHBpcmUiOjE1MTAwODA1NDI2NTcsImxvZ2luIjoiIn0.d5V3WsR9m1vqIAmP4uhZTfKNYs8Z3f4l3HaWPiWtUa4
+:token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHBpcmUiOjE1MTEwOTM5MjQ4MzcsImxvZ2luIjoiIn0.Dpar6zGLRcpdA1_grjqj5vwNOe2fxwhNKNUw3toNRS0
 :server = http://localhost:8080
 
 ### Load KPI
@@ -10,6 +10,19 @@ X-Access-Token: :token
 
 GET :server/kpi/1216b892-dfd3-451b-b89b-dbaf6b17d9d6
 X-Access-Token: :token
+
+### Generate Report for KPI 2
+
+POST :server/report/period
+Content-Type: application/json
+X-Access-Token: :token
+
+{
+   "kpi": "1216b892-dfd3-451b-b89b-dbaf6b17d9d6",
+   "start": "2017-10-15 00:00:00.000 +00:00",
+   "end": "2017-10-28 00:00:00.000 +00:00",
+   "frequency": 3
+}
 
 ### Load KPI 3
 
