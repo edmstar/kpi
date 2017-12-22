@@ -1,318 +1,300 @@
-var utils = require('../utils.js');
+const utils = require('../utils.js');
+let self;
 
-class ConsolidateService {
-    constructor(sequelize) {
-        this.sequelize = sequelize;
-    }
+function ConsolidateService(sequelize) {
+    this.sequelize = sequelize;
+    self = this;
+};
 
-    /**
-     * Consolidates KPI for the given @start and @end dates. Result is passed to callback.
-     * @param {KPI} kpi
-     * @param {Date} start
-     * @param {Date} end
-     * @param {void} callback
-     */
-    consolidate(kpi, start, end, callback) {
-        if (!kpi)
-            callback(null);
+ConsolidateService.ERROR_INVALID_KPI = "Invalid KPI";
 
-        var calculate = (function(values) {
-            callback(this.consolidateValues(values, kpi.consolidationType));
-        }).bind(this);
+/**
+ * Consolidates KPI for the given @start and @end dates. Result is passed to callback.
+ * @param {KPI} kpi
+ * @param {Date} start
+ * @param {Date} end
+ * @param {void} callback
+ */
+ConsolidateService.prototype.consolidate = function(kpi, start, end) {
+    if (!kpi)
+        throw new Error(ConsolidateService.ERROR_INVALID_KPI);
 
-        this.getElementsInPeriod(kpi, start, end, calculate);
-    }
+    return this.getElementsInPeriod(kpi, start, end).then((values) => this.consolidateValues(values, kpi.consolidationType));
+};
 
-    /**
-     * Calculates weighted mean value of {date, value} struct
-     * @param  values
-     * @param {string} frequency
-     * @param {string} consolidation
-     */
-    consolidateMultiple(values, start, end, frequency, consolidation) {
-        var containsFT = utils.frequencyTypeEnum.containsValue(frequency);
-        if (isNaN(frequency) || !values || !containsFT)
-            return [];
+/**
+ * Calculates weighted mean value of {date, value} struct
+ * @param  values
+ * @param {string} frequency
+ * @param {string} consolidation
+ */
+ConsolidateService.prototype.consolidateMultiple = function(values, start, end, frequency, consolidation) {
+    let containsFT = utils.frequencyTypeEnum.containsValue(frequency);
+    if (isNaN(frequency) || !values || !containsFT)
+        return [];
 
-        var periods = utils.getDateRange(start, end, frequency);
-        var key;
-        var periodValue;
+    let periods = utils.getDateRange(start, end, frequency);
+    let periodValue;
 
-        for(key in periods) {
-            periodValue = periods[key];
-            periodValue.values = [];
-        }
+    periods.forEach((periodValue) => { periodValue.values = []; });
 
-        for (var v in values) {
-            var value = values[v];
-            for (var p in periods) {
-                var period = periods[p];
-                var referenceDate = value.date ? value.date : value.start;
-                if (period.start.getTime() <= referenceDate.getTime() && period.end.getTime() >= referenceDate.getTime()) {
-                    period.values.push({
-                        value: value.value
-                    });
-                    break;
-                }
+    for (let value of values) {
+        for (let period of periods) {
+            let referenceDate = value.date ? value.date : value.start;
+            if (period.start.getTime() <= referenceDate.getTime() && period.end.getTime() >= referenceDate.getTime()) {
+                period.values.push({
+                    value: value.value
+                });
+                break;
             }
         }
-
-        for(key in periods) {
-            periodValue = periods[key];
-            periodValue.value = this.consolidateValues(periodValue.values, consolidation);
-            delete periodValue.values;
-        }
-
-        return periods;
     }
 
-    /**
-     * Consolidates value based on @consolidation type
-     * @param {[{ date: Date, value: float, weight: float }]} values 
-     * @param {string} consolidation
-     */
-    consolidateValues(values, consolidation) {
-        if (!values)
-            return null;
+    for (let periodValue of periods) {
+        periodValue.value = this.consolidateValues(periodValue.values, consolidation);
+        delete periodValue.values;
+    }
 
-        switch (parseInt(consolidation)) {
-            case utils.CONSOLIDATION_TYPES.MEAN:
-                return this.calculateMean(values);
-            case utils.CONSOLIDATION_TYPES.WEIGHTED:
-                return this.calculateWeighted(values);
-            case utils.CONSOLIDATION_TYPES.SUM:
-                return this.calculateSum(values);
-            case utils.CONSOLIDATION_TYPES.MIN:
-                return this.calculateMin(values);
-            case utils.CONSOLIDATION_TYPES.MAX:
-                return this.calculateMax(values);
-        }
+    return periods;
+};
+
+/**
+ * Consolidates value based on @consolidation type
+ * @param {[{ date: Date, value: float, weight: float }]} values 
+ * @param {string} consolidation
+ */
+ConsolidateService.prototype.consolidateValues = function(values, consolidation) {
+    if (!values)
         return null;
+
+    switch (parseInt(consolidation)) {
+        case utils.CONSOLIDATION_TYPES.MEAN:
+            return this.calculateMean(values);
+        case utils.CONSOLIDATION_TYPES.WEIGHTED:
+            return this.calculateWeighted(values);
+        case utils.CONSOLIDATION_TYPES.SUM:
+            return this.calculateSum(values);
+        case utils.CONSOLIDATION_TYPES.MIN:
+            return this.calculateMin(values);
+        case utils.CONSOLIDATION_TYPES.MAX:
+            return this.calculateMax(values);
+    }
+    return null;
+};
+
+/**
+ * Calculates mean value of {date, value, weight} struct
+ * @param {[{ date: Date, value: float, weight: float }]} values 
+ */
+ConsolidateService.prototype.calculateMean = function(values, count) {
+    if (!values || !values.length)
+        return null;
+
+    if (count == undefined)
+        count = values.length;
+
+    if (!count)
+        return null;
+
+    return this.calculateSum(values) / count;
+};
+
+/**
+ * Calculates weighted mean value of {date, value, weight} struct
+ * @param {[{ date: Date, value: float, weight: float }]} values 
+ */
+ConsolidateService.prototype.calculateWeighted = function(values) {
+    if (!values || !values.length)
+        return null;
+
+    let sum = 0.0;
+    let sumWeights = 0.0;
+    let hasValue = false;
+
+    for (let kpiValue of values) {
+        if (!isNaN(kpiValue.value)) {
+            hasValue = true;
+            sum += kpiValue.value * kpiValue.weight;
+            sumWeights += kpiValue.weight;
+        }
     }
 
-    /**
-     * Calculates mean value of {date, value, weight} struct
-     * @param {[{ date: Date, value: float, weight: float }]} values 
-     */
-    calculateMean(values, count) {
-        if (!values || !values.length)
-            return null;
+    return hasValue ? sum / sumWeights : null;
+};
 
-        if (count == undefined)
-            count = values.length;
+/**
+ * Calculates sum of {date, value, weight} struct
+ * @param {[{ date: Date, value: float, weight: float }]} values 
+ */
+ConsolidateService.prototype.calculateSum = function(values) {
+    if (!values || !values.length)
+        return null;
 
-        if (!count)
-            return null;
-
-        return this.calculateSum(values) / count;
+    let hasValue = false;
+    let sum = 0.0;
+    for (let kpiValue of values) {
+        if (kpiValue.value) {
+            sum += kpiValue.value;
+            hasValue = true;
+        }
     }
 
-    /**
-     * Calculates weighted mean value of {date, value, weight} struct
-     * @param {[{ date: Date, value: float, weight: float }]} values 
-     */
-    calculateWeighted(values) {
-        if (!values || !values.length)
-            return null;
+    return hasValue ? sum : null;
+};
 
-        var sum = 0.0;
-        var sumWeights = 0.0;
-        var hasValue = false;
+/**
+ * Calculates minimum value of {date, value, weight} struct
+ * @param {[{ date: Date, value: float, weight: float }]} values 
+ */
+ConsolidateService.prototype.calculateMin = function(values) {
+    if (!values || !values.length)
+        return null;
 
-        for (var index in values) {
-            var kpivalue = values[index];
-            if (!isNaN(kpivalue.value)) {
-                hasValue = true;
-                sum += kpivalue.value * kpivalue.weight;
-                sumWeights += kpivalue.weight;
+    let min = values[0].value;
+    let hasValue = !isNaN(min);
+
+    for (let kpiValue of values) {
+        if (!isNaN(kpiValue.value)) {
+            hasValue = true;
+            if (kpiValue.value < min)
+                min = kpiValue.value;
+        }
+    }
+
+    return hasValue ? min : null;
+};
+
+/**
+ * Calculates maximum value of {date, value, weight} struct
+ * @param {[{ date: Date, value: float, weight: float }]} values 
+ */
+ConsolidateService.prototype.calculateMax = function(values) {
+    if (!values || !values.length)
+        return null;
+
+    let max = values[0].value;
+    let hasValue = !isNaN(max);
+
+    for (let kpiValue of values) {
+        if (!isNaN(kpiValue.value)) {
+            hasValue = true;
+            if (kpiValue.value > max)
+                max = kpiValue.value;
+        }
+    }
+
+    return hasValue ? max : null;
+};
+
+
+/**
+ * KPI object where values will be extracted
+ * @param {KPI} kpi
+ * @param {Date} start
+ * @param {Date} end
+ * @param {utils.FREQUENCY_TYPES} frequency
+ * @param {utils.FREQUENCY_TYPES} multipleConsolidation
+ * @param {void} callback
+ */
+ConsolidateService.prototype.getElementsInPeriodByFrequency = function(kpi, start, end, frequency, multipleConsolidation) {
+    if (!kpi)
+        throw new Error(ConsolidateService.ERROR_INVALID_KPI);
+
+    let roundedStart = start; //utils.dateRoundDown(start, frequency);
+    let roundedEnd = end; //utils.dateRoundUp(end, frequency);
+
+    if (frequency == null)
+        return kpi.getPeriod(start, end);
+
+    let dates = utils.getDateRange(roundedStart, roundedEnd, frequency);
+
+    return kpi.getPeriod(start, end).then((kpiValues) => {
+        let aggregatedValues = [];
+
+        // aggregate by multipleConsolidation type
+        if (multipleConsolidation) {
+            aggregatedValues = this.consolidateMultiple(kpiValues, start, end, frequency, multipleConsolidation);
+
+            if (aggregatedValues && aggregatedValues.length > 0) {
+                aggregatedValues[0].start = start;
+                aggregatedValues[aggregatedValues.length - 1].end = end;
             }
+        } else {
+            aggregatedValues = kpiValues; //this.consolidateMultiple(kpiValues, frequency, kpi.consolidationType);
         }
 
-        return hasValue ? sum / sumWeights : null;
-    }
+        // merge values from empty date array
+        let consolidatedValues = this.mergeDateValues(dates, aggregatedValues);
+        return Promise.resolve(consolidatedValues);
+    });
+};
 
-    /**
-     * Calculates sum of {date, value, weight} struct
-     * @param {[{ date: Date, value: float, weight: float }]} values 
-     */
-    calculateSum(values) {
-        if (!values || !values.length)
-            return null;
+/**
+ * KPI object where values will be extracted
+ * @param {KPI} kpi 
+ * @param {Date} start 
+ * @param {Date} end 
+ * @param {void} callback 
+ */
+ConsolidateService.prototype.getElementsInPeriod = function(kpi, start, end) {
+    return this.getElementsInPeriodByFrequency(kpi, start, end, kpi.frequency, kpi.multipleConsolidationType);
+};
 
-        var hasValue = false;
-        var sum = 0.0;
-        for (var index in values) {
-            var kpivalue = values[index];
-            if (kpivalue.value) {
-                sum += kpivalue.value;
-                hasValue = true;
-            }
-        }
+/**
+ * 
+ * @param {[{date: Date, value: float, weight: float}]} empty 
+ * @param {[{date: Date, value: float, weight: float}]} data 
+ */
+ConsolidateService.prototype.mergeDateValues = function(empty, data) {
+    if (!empty)
+        return null;
 
-        return hasValue ? sum : null;
-    }
+    let sort = function(a, b) {
+        return a.start.getTime() - b.start.getTime();
+    };
 
-    /**
-     * Calculates minimum value of {date, value, weight} struct
-     * @param {[{ date: Date, value: float, weight: float }]} values 
-     */
-    calculateMin(values) {
-        if (!values || !values.length)
-            return null;
+    let values = empty.slice().sort(sort);
+    let dataValues = data.slice().sort(sort);
+    let currentPosition = 0;
 
-        var min = values[0].value;
-        var hasValue = !isNaN(min);
+    for (let index in dataValues) {
+        let value = dataValues[index];
+        let inserted = false;
 
-        for (var index in values) {
-            var kpivalue = values[index];
-            if (!isNaN(kpivalue.value)) {
-                hasValue = true;
-                if (kpivalue.value < min)
-                    min = kpivalue.value;
-            }
-        }
-
-        return hasValue ? min : null;
-    }
-
-    /**
-     * Calculates maximum value of {date, value, weight} struct
-     * @param {[{ date: Date, value: float, weight: float }]} values 
-     */
-    calculateMax(values) {
-        if (!values || !values.length)
-            return null;
-
-        var max = values[0].value;
-        var hasValue = !isNaN(max);
-
-        for (var index in values) {
-            var kpivalue = values[index];
-            if (!isNaN(kpivalue.value)) {
-                hasValue = true;
-                if (kpivalue.value > max)
-                    max = kpivalue.value;
-            }
-        }
-
-        return hasValue ? max : null;
-    }
-
-
-    /**
-     * KPI object where values will be extracted
-     * @param {KPI} kpi
-     * @param {Date} start
-     * @param {Date} end
-     * @param {utils.FREQUENCY_TYPES} frequency
-     * @param {utils.FREQUENCY_TYPES} multipleConsolidation
-     * @param {void} callback
-     */
-    getElementsInPeriodByFrequency(kpi, start, end, frequency, multipleConsolidation, callback) {
-        if (!kpi) {
-            if (callback) callback(null);
-            return;
-        }
-
-        var roundedStart = start; //utils.dateRoundDown(start, frequency);
-        var roundedEnd = end; //utils.dateRoundUp(end, frequency);
-
-        if (frequency == null) {
-            kpi.getPeriod(start, end, callback);
-            return;
-        }
-
-        var dates = utils.getDateRange(roundedStart, roundedEnd, frequency);
-        var getValuesCallback = (function(kpiValues) {
-            var aggregatedValues = [];
-
-            // aggregate by multipleConsolidation type
-            if (multipleConsolidation) {
-                aggregatedValues = this.consolidateMultiple(kpiValues, start, end, frequency, multipleConsolidation);
-
-                if (aggregatedValues && aggregatedValues.length > 0) {
-                    aggregatedValues[0].start = start;
-                    aggregatedValues[aggregatedValues.length - 1].end = end;
-                }
-            } else {
-                aggregatedValues = kpiValues; //this.consolidateMultiple(kpiValues, frequency, kpi.consolidationType);
-            }
-
-            // merge values from empty date array
-            var consolidatedValues = this.mergeDateValues(dates, aggregatedValues);
-            if (callback) callback(consolidatedValues);
-        }).bind(this);
-
-        kpi.getPeriod(start, end, getValuesCallback);
-    }
-
-    /**
-     * KPI object where values will be extracted
-     * @param {KPI} kpi 
-     * @param {Date} start 
-     * @param {Date} end 
-     * @param {void} callback 
-     */
-    getElementsInPeriod(kpi, start, end, callback) {
-        this.getElementsInPeriodByFrequency(kpi, start, end, kpi.frequency, kpi.multipleConsolidationType, callback);
-    }
-
-    /**
-     * 
-     * @param {[{date: Date, value: float, weight: float}]} empty 
-     * @param {[{date: Date, value: float, weight: float}]} data 
-     */
-    mergeDateValues(empty, data) {
-        if (!empty)
-            return null;
-
-        var sort = function(a, b) {
-            return a.start.getTime() - b.start.getTime();
-        };
-
-        var values = empty.slice().sort(sort);
-        var dataValues = data.slice().sort(sort);
-        var currentPosition = 0;
-
-        for (var index in dataValues) {
-            var value = dataValues[index];
-            var inserted = false;
-
-            // list is ordered, so we must continue from last insertion
-            for (; currentPosition < values.length; currentPosition++) {
-                var element = values[currentPosition];
-                if (element.start.getTime() == value.start.getTime() && element.end.getTime() == value.end.getTime()) {
-                    values.splice(currentPosition, 1, {
-                        start: value.start,
-                        end: value.end,
-                        value: value.value,
-                        weight: value.weight
-                    });
-                    currentPosition++;
-                    inserted = true;
-                    break;
-                } else if (element.start.getTime() > value.start.getTime()) {
-                    values.splice(currentPosition, 0, {
-                        start: value.start,
-                        end: value.end,
-                        value: value.value,
-                        weight: value.weight
-                    });
-                    inserted = true;
-                    currentPosition++;
-                    break;
-                }
-            }
-
-            if (!inserted && currentPosition >= values.length) {
-                values = values.concat(dataValues.slice(index));
+        // list is ordered, so we must continue from last insertion
+        for (; currentPosition < values.length; currentPosition++) {
+            let element = values[currentPosition];
+            if (element.start.getTime() == value.start.getTime() && element.end.getTime() == value.end.getTime()) {
+                values.splice(currentPosition, 1, {
+                    start: value.start,
+                    end: value.end,
+                    value: value.value,
+                    weight: value.weight
+                });
+                currentPosition++;
+                inserted = true;
+                break;
+            } else if (element.start.getTime() > value.start.getTime()) {
+                values.splice(currentPosition, 0, {
+                    start: value.start,
+                    end: value.end,
+                    value: value.value,
+                    weight: value.weight
+                });
+                inserted = true;
+                currentPosition++;
                 break;
             }
         }
 
-        return values;
+        if (!inserted && currentPosition >= values.length) {
+            values = values.concat(dataValues.slice(index));
+            break;
+        }
     }
 
-}
+    return values;
+};
+
 
 module.exports = ConsolidateService;

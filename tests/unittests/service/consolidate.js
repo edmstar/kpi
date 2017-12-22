@@ -8,15 +8,10 @@ var ConsolidateService = require('../../../libs/service/consolidate.js');
 var consolidate = new ConsolidateService(model.sequelize);
 
 describe('ConsolidateService', function() {
-    before(function(done) {
+    before(function() {
         this.timeout(5000);
-        model.resetModels(function() {
-            model.populate(function() {
-                done();
-            });
-        });
+        return model.resetModels().then(() => model.populate());
     });
-
 
     it('consolidateValues(values, consolidation) should return the consolidated value based on consolidation type provided', function() {
         var startDate = new Date('01/01/2000 00:00:00 +00:00');
@@ -110,16 +105,14 @@ describe('ConsolidateService', function() {
 
     });
 
-   it('consolidate(kpi, start, end, callback) should return 100 for KPI with {frequency=day, consolidation=sum, multipleConsolidation=sum}', function(done) {
+   it('consolidate(kpi, start, end) should return 100 for KPI with {frequency=day, consolidation=sum, multipleConsolidation=sum}', function() {
        var name = "KPI|" + utils.CONSOLIDATION_TYPES.SUM + "|" + utils.FREQUENCY_TYPES.DAY;
-
-       evaluateKpiConsolidation(name, 100, done);
+       return evaluateKpiConsolidation(name, 100);
    });
 
-    it('consolidate(kpi, start, end, callback) should return 10 for KPI with {frequency=day, consolidation=mean, multipleConsolidation=sum}', function(done) {
+    it('consolidate(kpi, start, end) should return 10 for KPI with {frequency=day, consolidation=mean, multipleConsolidation=sum}', function() {
         var name = "KPI|" + utils.CONSOLIDATION_TYPES.MEAN + "|" + utils.FREQUENCY_TYPES.DAY;
-
-        evaluateKpiConsolidation(name, 10, done);
+        return evaluateKpiConsolidation(name, 10);
     });
 
 });
@@ -127,23 +120,22 @@ describe('ConsolidateService', function() {
 function evaluateKpiConsolidation(name, value, done) {
     var kpi = null;
 
-    model.KPI.findAll({
+    return model.KPI.findAll({
         where: {
             name: name
         }
-    }).catch(function() {
+    }).catch(() => {
         expect.fail(0, 1, "KPI not found");
         done();
-    }).then(function(values) {
+    }).then(values => {
         expect(values).to.have.length(1);
         kpi = values[0];
 
         var start = constants.startDate;
         var end = utils.getNextDate(start, kpi.frequency, constants.days - 1);
 
-        consolidate.consolidate(kpi, start, end, function(result) {
+        return consolidate.consolidate(kpi, start, end).then(result => {
             expect(result).to.equal(value);
-            done();
         });
     });
 }

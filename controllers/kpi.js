@@ -1,102 +1,56 @@
-var bodyParser = require('body-parser');
-var controller = require('./icontroller.js');
-var KPIData = require('../libs/data/kpi.js');
-// var ConsolidateData = require('../libs/data/consolidate.js');
+const utils = require('../libs/utils.js');
+const bodyParser = require('body-parser');
+const IController = require('./icontroller.js');
+const KPIData = require('../libs/data/kpi.js');
 
-var dataServiceKPI = null;
-var dataServiceConsolidate = null;
 var self = null;
 
-class KPIController extends controller.IController {
-
-    constructor(app) {
-        super(app);
-        dataServiceKPI = new KPIData(this.app.sequelize);
-        // dataServiceConsolidate = new ConsolidateData(this.app.sequelize);
-        self = this;
-    }
-
-    /**
-     * Applies routes
-     */
-    applyRoutes() {
-
-        this.app.get("/kpi/:id", bodyParser.json(), function(req, res) {
-            var callback = function(kpi, error) {
-                self.error(res, error);
-                res.status(200);
-                res.send(kpi);
-            };
-
-            var error = (errors => {
-                self.error(res, errors);
-            });
-
-            dataServiceKPI.load({
-                id: req.params.id
-            }, callback, error);
-        });
-
-        this.app.post("/kpi", bodyParser.json(), function(req, res) {
-            var callback = function(kpi, error) {
-                self.error(req, error);
-                res.status(200);
-                res.send(kpi);
-            };
-
-            var error = (errors => {
-                self.error(res, errors);
-            });
-
-            dataServiceKPI.create(req.body, callback, error);
-        });
-
-        this.app.post("/kpi/value", bodyParser.json(), function(req, res) {
-            var callback = function(kpi, error) {
-                self.error(res, error);
-                res.status(200);
-                res.send("Successfuly added");
-            };
-
-            var error = (errors => {
-                self.error(res, errors);
-            });
-
-            dataServiceKPI.addValue(req.body, callback, error);
-        });
-
-        this.app.get("/kpi/value/:id", bodyParser.json(), function(req, res) {
-            var callback = function(kpiValue, error) {
-                self.error(res, error);
-                res.status(200);
-                res.send(kpiValue);
-            };
-
-            var error = (errors => {
-                self.error(res, errors);
-            });
-
-            dataServiceKPI.loadValue({
-                id: req.params.id
-            }, callback, error);
-        });
-
-        this.app.get("/kpi/name/:name", bodyParser.json(), function(req, res) {
-            var callback = function(kpi, error) {
-                self.error(res, error);
-                res.status(200);
-                res.send(kpi);
-            };
-
-            var error = (errors => {
-                self.error(res, errors);
-            });
-
-            dataServiceKPI.loadByName({
-                name: req.params.name
-            }, callback, error);
-        });
-    }
+function KPIController(app) {
+    IController.call(this, app);
+    this.dataServiceKPI = new KPIData(this.app.sequelize);
+    self = this;
 }
+
+IController.compose(KPIController);
+
+/**
+ * Applies routes
+ */
+KPIController.prototype.applyRoutes = function() {
+
+    this.app.get("/kpi/:id", bodyParser.json(), function(req, res, next) {
+        self.dataServiceKPI.load({
+            id: req.params.id
+        }).then((data) => res.json(utils.success(data))).catch(next);
+    });
+
+    this.app.post("/kpi", bodyParser.json(), function(req, res, next) {
+        self.dataServiceKPI.create(req.body).then((data) => res.json(utils.success(data))).catch(next);
+    });
+
+    this.app.post("/kpi/value", bodyParser.json(), function(req, res, next) {
+        self.dataServiceKPI.addValue(req.body).then((data) => res.json(utils.success(data))).catch(next);
+    });
+
+    this.app.post("/kpi/values/", bodyParser.json(), function(req, res, next) {
+        self.dataServiceKPI.addValues(req.body).then((data) => res.json(utils.success(data))).catch(next);
+    });
+
+    this.app.post("/kpi/values/csv", bodyParser.json(), function(req, res, next) {
+        self.dataServiceKPI.addValuesCsv(req.body).then((data) => res.json(utils.success(data))).catch(next);
+   });
+
+    this.app.get("/kpi/value/:id", bodyParser.json(), function(req, res, next) {
+        self.dataServiceKPI.loadValue({
+            id: req.params.id
+        }).then((data) => res.json(utils.success(data))).catch(next);
+    });
+
+    this.app.get("/kpi/name/:name", bodyParser.json(), function(req, res, next) {
+        self.dataServiceKPI.loadByName({
+            name: req.params.name
+        }).then((data) => res.json(utils.success(data))).catch(next);
+    });
+};
 
 exports.KPIController = KPIController;
