@@ -36,3 +36,6 @@ node_modules
 .projectile
 *\#*
 .tern*
+GPATH
+GRTAGS
+GTAGS

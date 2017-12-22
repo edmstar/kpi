@@ -14,94 +14,59 @@ var service = new KPIService(model.sequelize);
 var contextDone = null;
 
 describe('KPIService', function() {
-    before(function(done) {
+    before(function() {
         this.timeout(5000);
-        model.resetModels(function() {
-            model.populate(function() {
-                done();
-            });
-        });
+        return model.resetModels().then(() => model.populate());
     });
 
-    var parseCreate = function(result, error) {
+    var parseCreate = function(result) {
         expect(result).to.not.equal(null);
-        expect(error).to.equals(false);
         expect(result.dataValues.id).to.be.a.uuid();
+
+        return result;
     };
 
-    it('Add new KPI to database with no targets.', function(done) {
-        var createSuccessful = function(result, error) {
-            testutils.check(done, () => {
-                parseCreate(result, error);
-                done();
-            });
-        };
-
-        service.create(constants.kpis.KPI1, createSuccessful, (error) => {
-            done(error);
-        });
+    it('Add new KPI to database with no targets.', function() {
+        return service.create(constants.kpis.KPI1).then(parseCreate);
     });
 
-    it('Add new KPI with existing name.', function(done) {
-        var kpi = JSON.parse(JSON.stringify(model.mocks.KPI[0].dataValues));
+    it('Add new KPI with existing name.', function() {
+        var kpi = Object.assign({}, model.mocks.KPI[0].dataValues); // copy
         kpi.id = uuid();
         delete kpi.createdAt;
         delete kpi.updatedAt;
 
-        service.create(kpi, (result, error) => {
-            testutils.check(done, () => {
-                expect(result).to.null();
-                expect(error).to.equal('KPI not created.');
-                done();
-            });
-        }, (error) => {
-            testutils.check(done, () => {
-                expect(error.name).to.equal('SequelizeUniqueConstraintError');
-                done();
-            });
+        return service.create(kpi).catch((error) => {
+            let message = error.message;
+            expect(message).to.equal(service.ERROR_KPI_NOT_CREATED);
+            // expect(error.name).to.equal('SequelizeUniqueConstraintError');
         });
     });
 
-    it('Add new KPIValue', function(done) {
+    it('Add new KPIValue', function() {
         var kpiValue = constants.kpiValues.KPIValue1;
-        service.addValue(kpiValue, (result, error) => {
-            testutils.check(done, () => {
-                parseCreate(result, error);
-                expect(result.value).to.equal(kpiValue.value);
-                done();
-            });
-        }, (error) => {
-            done(error);
+        return service.addValue(kpiValue).then(parseCreate).then((result) => {
+            expect(result.value).to.equal(kpiValue.value);
         });
     });
 
-    it('Load the first KPI mocked in the database', function(done) {
+    it('Load the first KPI mocked in the database', function() {
         var referenceKpi = model.mocks.KPI[0];
-        service.load(referenceKpi.id, (result, error) => {
-            testutils.check(done, () => {
-                expect(result.id).to.equal(referenceKpi.id);
-                expect(result.name).to.equal(referenceKpi.name);
-                done();
-            });
-        }, (error) => {
-            done(error);
+        return service.load(referenceKpi.id).then(result => {
+            expect(result.id).to.equal(referenceKpi.id);
+            expect(result.name).to.equal(referenceKpi.name);
         });
     });
 
-    it('Load the first KPI Value mocked in the database', function(done) {
+    it('Load the first KPI Value mocked in the database', function() {
         var referenceKpiValue = model.mocks.KPI_VALUE[0];
-        service.loadValue(referenceKpiValue.id, (result, error) => {
-            testutils.check(done, () => {
-                expect(result.id).to.equal(referenceKpiValue.id);
-                expect(result.id_kpi).to.equal(referenceKpiValue.id_kpi);
-                done();
-            });
-        }, (error) => {
-            done(error);
+        service.loadValue(referenceKpiValue.id).then(result => {
+            expect(result.id).to.equal(referenceKpiValue.id);
+            expect(result.id_kpi).to.equal(referenceKpiValue.id_kpi);
         });
     });
 
-    it('Load a range of KPI values given by a certain range that is contained by the all the KPI values in the database', function(done) {
+    it('Load a range of KPI values given by a certain range that is contained by the all the KPI values in the database', function() {
         var referenceKpiValues = [];
         var referenceKpi = model.mocks.KPI[0];
 
@@ -115,38 +80,17 @@ describe('KPIService', function() {
                 referenceKpiValues.push(value.dataValues);
         }
 
-        referenceKpi.getPeriod(start, end, (values) => {
-            var element = null;
-            var referenceElement = null;
-            var contains = false;
-            testutils.check(done, () => {
-                for (var e in values) {
-                    element = values[e];
-                    contains = false;
-                    for (var i in referenceKpiValues) {
-                        referenceElement = referenceKpiValues[i];
-                        if (element.date.getTime() == referenceElement.date.getTime()) {
-                            contains = true;
-                            break;
-                        }
-                    }
-                    // Filtered date must have been found on the reference list
-                    expect(contains).to.equal(true);
-                }
-                for (var r in referenceKpiValues) {
-                    referenceElement = referenceKpiValues[r];
-                    contains = false;
-                    for (var j in values) {
-                        element = values[j];
-                        if (element.date.getTime() == referenceElement.date.getTime()) {
-                            contains = true;
-                            break;
-                        }
-                    }
-                    expect(contains).to.equal(true);
-                }
-                done();
-            });
+        return referenceKpi.getPeriod(start, end).then(values => {
+            for (let element of values) {
+                let containsDate = referenceKpiValues.reduce((last, referenceElement) => last || (referenceElement.date.getTime() == element.date.getTime()), false);
+
+                expect(containsDate).to.equals(true);
+            }
+            for (let referenceElement of referenceKpiValues) {
+                let containsDate = values.reduce((last, element) => last || (referenceElement.date.getTime() == element.date.getTime()), false);
+
+                expect(containsDate).to.equals(true);
+            }
         });
     });
 });

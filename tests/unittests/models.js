@@ -28,22 +28,16 @@ const sequelize = new Sequelize('kpi', 'admin', 'password', {
 
 var models = require('../../models/models.js');
 
-function generateMockArray(results)
-{
+function generateMockArray(results) {
     var values = [];
-    for(var v in results)
-    {
+    for (var v in results) {
         var value = results[v];
         values.push(value);
     }
     return values;
 };
 
-/**
- *
- * @param {void} callback
- */
-function populateKPI(callback) {
+function populateKPI() {
     var KPI = require('../../models/kpi.js')(sequelize);
     items = [];
 
@@ -74,10 +68,10 @@ function populateKPI(callback) {
         }
     }
 
-    KPI.bulkCreate(items).then(() => {
-        KPI.findAll().then((values) => {
+    return KPI.bulkCreate(items).then(() => {
+        return KPI.findAll().then((values) => {
             exports.mocks.KPI = generateMockArray(values);
-            populateKPIValues(values, callback);
+            return populateKPIValues(values);
         });
     });
 }
@@ -85,9 +79,8 @@ function populateKPI(callback) {
 /**
  *
  * @param {KPI} options
- * @param {void} callback
  */
-function populateKPIValues(values, callback) {
+function populateKPIValues(values) {
     var KPI_VALUE = require('../../models/kpi_value.js')(sequelize);
     var kpiValues = [];
 
@@ -109,27 +102,26 @@ function populateKPIValues(values, callback) {
         }
 
     }
-    KPI_VALUE.bulkCreate(kpiValues).then((results) => {
+
+    return KPI_VALUE.bulkCreate(kpiValues).then((results) => {
         exports.mocks.KPI_VALUE = generateMockArray(results);
-        callback(results);
+        return results;
     });
 }
 
 exports.mocks = {};
-exports.populate = function(callback) {
-    populateKPI(callback);
+exports.populate = function() {
+    return populateKPI();
 };
 
 exports.populateKPIValues = populateKPIValues;
 
 exports.sequelize = sequelize;
-exports.resetModels = function(callback) {
-    models.loadModels(sequelize, {
+exports.resetModels = function() {
+    return models.loadModels(sequelize, {
         force: true
-    }, function() {
+    }).then(() => {
         exports.KPI = models.KPI;
         exports.KPI_VALUE = models.KPI_VALUE;
-
-        callback();
     });
 };

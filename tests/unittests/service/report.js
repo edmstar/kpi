@@ -12,47 +12,35 @@ var KPIService = require('../../../libs/service/kpi.js');
 var kpi = new KPIService(model.sequelize);
 
 describe('ReportService', function() {
-    before(function(done) {
+    before(function() {
         this.timeout(5000);
-        model.resetModels(function() {
-            model.populate(function() {
-                done();
-            });
-        });
+        return model.resetModels().then(() => model.populate());
     });
 
-    it('Generate simple KPI report with KPI target and percentage margins', function(done) {
+    it('Generate simple KPI report with KPI target and percentage margins', function() {
         var referenceDate = new Date(constants.startDate.getTime());
 
         // populates KPI with values
         var getReport = function(reportedKpi) {
-            report.getKpiReport({
+            return report.getKpiReport({
                 kpiName: reportedKpi.name,
                 start: referenceDate,
                 end: utils.getBeforeNextDate(referenceDate, utils.FREQUENCY_TYPES.MONTH, 3),
                 frequency: utils.FREQUENCY_TYPES.MONTH
-            }, function(result) {
-                done();
             });
         };
 
-        var addValues = function(kpiModel, callback) {
-            model.populateKPIValues([kpiModel], (resultValues) => {
-                testutils.check(done, () => {
-                    expect(resultValues).to.not.equal(null);
-                });
-
-                callback(resultValues);
+        var addValues = function(kpiModel) {
+            return model.populateKPIValues([kpiModel]).then((resultValues) => {
+                expect(resultValues).to.not.equal(null);
+                return resultValues;
             });
         };
 
-        var addKpi = function(kpiData, callback) {
-            kpi.create(kpiData, (resultKpi, error) => {
-                testutils.check(done, () => {
-                    expect(resultKpi).to.not.equal(null);
-                });
-
-                callback(resultKpi);
+        var addKpi = function(kpiData) {
+            return kpi.create(kpiData).then(resultKpi => {
+                expect(resultKpi).to.not.equal(null);
+                return resultKpi;
             });
         };
 
@@ -63,26 +51,26 @@ describe('ReportService', function() {
         kpiToAdd.target_max_type = utils.TARGET_MARGIN_TYPES.PERCENTAGE;
         kpiToAdd.target_max = "1.2";
 
-        addKpi(constants.kpis.TargetKPI1, (kpiTargetModel) => {
-            addValues(kpiTargetModel, (kpiValuesTargetModel) => {
+        let kpiModel;
+
+        return addKpi(constants.kpis.TargetKPI1)
+            .then(addValues)
+            .then(() => {
                 model.KPI_VALUE.update({
                     value: 1
                 }, {
                     where: {
                         id_kpi: constants.kpis.TargetKPI1.id
                     }
-                }).then((updateResult) => {
-                    testutils.check(done, () => {
-                        expect(updateResult).to.not.equal(null);
-                    });
-
-                    addKpi(kpiToAdd, (kpiModel) => {
-                        addValues(kpiModel, (kpiValuesModel) => {
-                            getReport(kpiModel);
-                        });
-                    });
                 });
+            })
+            .then((updateResult) => expect(updateResult).to.not.equal(null))
+            .then(() => addKpi(kpiToAdd))
+            .then((model) => {
+                kpiModel = model;
+                return addValues(kpiModel);
+            }).then((kpiValuesModel) => {
+                return getReport(kpiModel);//.then((report) => console.log(report));
             });
-        });
     });
 });

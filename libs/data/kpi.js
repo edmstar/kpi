@@ -4,63 +4,45 @@ var objectMapper = require('object-mapper');
 var kpiMap = require('./mappings/kpi.js');
 var kpiValueMap = require('./mappings/kpi_value.js');
 
-class KPIData {
-    constructor(sequelize) {
-        this.sequelize = sequelize;
-        this.service = new KPIService(sequelize);
-    }
-
-    load(data, callback, error) {
-        var serviceCallback = function(kpi) {
-            if (kpi) callback(utils.success(objectMapper(kpi.dataValues, kpiMap.mapFromModel)));
-        };
-
-        this.service.load(data.id, serviceCallback, (errors) => {
-            error(utils.error(errors));
-        });
-    }
-
-    loadByName(data, callback, error) {
-        var serviceCallback = function(kpi) {
-            if (kpi) callback(utils.success(objectMapper(kpi.dataValues, kpiMap.mapFromModel)));
-        };
-
-        this.service.loadByName(data.name, serviceCallback, (errors) => {
-            error(utils.error(errors));
-        });
-    }
-
-    create(data, callback, error) {
-        var serviceCallback = function(kpi) {
-            if (kpi) callback(utils.success(objectMapper(kpi.dataValues, kpiMap.mapFromModel)));
-        };
-
-        var dto = objectMapper(data, kpiMap.mapToModel);
-        this.service.create(dto, serviceCallback, (errors) => {
-            error(utils.error(errors));
-        });
-    }
-
-    loadValue(data, callback, error) {
-        var serviceCallback = function(kpiValue) {
-            if (kpiValue) callback(utils.success(objectMapper(kpiValue.dataValues, kpiValueMap.mapFromModel)));
-        };
-
-        this.service.loadValue(data.id, serviceCallback, (errors) => {
-            error(utils.error(errors));
-        });
-    }
-
-    addValue(data, callback, error) {
-        var serviceCallback = function(kpiValue) {
-            if (kpiValue) callback(utils.success(kpiValue.dataVaues, kpiValueMap.mapFromModel));
-        };
-
-        var dto = objectMapper(data, kpiValueMap.mapToModel);
-        this.service.addValue(dto, serviceCallback, (errors) => {
-            error(utils.error(errors));
-        });
-    }
+function KPIData(sequelize) {
+    this.sequelize = sequelize;
+    this.service = new KPIService(sequelize);
 }
+
+function mapToOutput(value, model) {
+    return utils.success(objectMapper(value, model));
+}
+
+KPIData.prototype.load = function(data) {
+    return this.service.load(data.id).then((kpi) => mapToOutput(kpi.dataValues, kpiMap.mapFromModel));
+};
+
+KPIData.prototype.loadByName = function(data) {
+    return this.service.loadByName(data.name).then((kpi) => mapToOutput(kpi.dataValues, kpiMap.mapFromModel));
+};
+
+KPIData.prototype.create = function(data) {
+    let dto = objectMapper(data, kpiMap.mapToModel);
+    return this.service.create(dto).then((kpi) => mapToOutput(kpi.dataValues, kpiMap.mapFromModel));
+};
+
+KPIData.prototype.loadValue = function(data) {
+    return this.service.loadValue(data.name).then((kpiValue) => mapToOutput(kpiValue.dataValues, kpiValueMap.mapFromModel));
+};
+
+KPIData.prototype.addValue = function(data) {
+    let dto = objectMapper(data, kpiValueMap.mapToModel);
+    return this.service.addValue(dto).then((kpiValue) => mapToOutput(kpiValue.dataValues, kpiValueMap.mapFromModel));
+};
+
+KPIData.prototype.addValues = function(data) {
+    let dto = objectMapper(data, kpiValueMap.mapMultipleToModel);
+    return this.service.addValues(dto).then((kpiValue) => mapToOutput(kpiValue.dataValues, kpiValueMap.mapFromModel));
+};
+
+KPIData.prototype.addValuesCsv = function(data) {
+    let dto = objectMapper(data, kpiValueMap.mapToModel);
+    return this.service.addValues(dto).then((kpiValue) => mapToOutput(kpiValue.dataValues, kpiValueMap.mapFromModel));
+};
 
 module.exports = KPIData;

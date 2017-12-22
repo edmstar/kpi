@@ -3,217 +3,196 @@ var ConsolidateService = require('./consolidate.js');
 var KPIService = require('./kpi.js');
 var self;
 
-class ReportService {
-    constructor(sequelize) {
-        this.consolidateService = new ConsolidateService(sequelize);
-        this.kpiService = new KPIService(sequelize);
-        self = this;
-    }
+function ReportService(sequelize) {
+    this.consolidateService = new ConsolidateService(sequelize);
+    this.kpiService = new KPIService(sequelize);
+    self = this;
+};
 
-    getKpiReport(options, callback) {
-        var kpiReport = {
-            results: null,
-            target: null,
-            targetMin: null,
-            targetMax: null
-        };
-        var marginsProcessed = 0;
+ReportService.ERROR_INVALID_ARGUMENTS = "Invalid arguments";
+ReportService.ERROR_INVALID_TARGET_TYPE = "Invalid target type";
+ReportService.ERROR_INVALID_FREQUENCY_TYPE = "Invalid frequency type";
+ReportService.ERROR_INVALID_KPI = "Invalid KPI";
 
-        var getTargetsReport = function() {
-            var processMarginsReport = function(marginType) {
-                return function(result) {
-                    if (marginType == "min") {
-                        options.targetMin = result;
-                    } else if (marginType == "max") {
-                        options.targetMax = result;
-                    }
+ReportService.prototype.getKpiReport = function(options) {
+    self.parseOptions(options);
 
-                    marginsProcessed++;
-                    if (marginsProcessed == 2) { // min and max
-                        kpiReport.results = options.results;
-                        kpiReport.target = options.target;
-                        kpiReport.targetMin = options.targetMin;
-                        kpiReport.targetMax = options.targetMax;
+    let kpiReport = {
+        results: null,
+        target: null,
+        targetMin: null,
+        targetMax: null
+    };
+    let marginsProcessed = 0;
 
-                        callback(kpiReport);
-                    }
-                };
-            };
+    let getTargetsReport = function(reportResults) {
+        // process target
+        return self.processTarget(options).then((result) => {
+            options.target = result;
 
-            // process target
-            self.processTarget(options, function(result) {
-                options.target = result;
-                self.processTargetMin(options, processMarginsReport("min")); // process min
-                self.processTargetMax(options, processMarginsReport("max")); // process min
-            });
-        };
+            return Promise.all([
+                self.processTargetMin(options), // process min
+                self.processTargetMax(options)  // process max
+            ]).then((targets) => {
+                kpiReport.targetMin = targets[0], //
+                kpiReport.targetMax = targets[1],
+                kpiReport.results = reportResults;
+                kpiReport.target = options.target;
 
-        this.processKpiValues(options, function(result) {
-            options.results = result;
-            getTargetsReport();
+                return kpiReport;
+            });// process max
         });
-    }
+    };
 
-    processTargetMin(options, callback) {
-        var reportConfig = {};
+    return self.processKpiValues(options).then(getTargetsReport);
+};
 
-        reportConfig.targetTypeField = "target_min_type";
-        reportConfig.targetConstantField = "target_min";
-        reportConfig.targetKpiField = "target_min_kpi";
-        reportConfig.options = options;
+ReportService.prototype.processTargetMin = function(options) {
+    let reportConfig = {};
 
-        self.processTargetConsolidation(reportConfig, callback);
-    }
+    reportConfig.targetTypeField = "target_min_type";
+    reportConfig.targetConstantField = "target_min";
+    reportConfig.targetKpiField = "target_min_kpi";
+    reportConfig.options = options;
 
-    processTargetMax(options, callback) {
-        var reportConfig = {};
+    return self.processTargetConsolidation(reportConfig);
+};
 
-        reportConfig.targetTypeField = "target_max_type";
-        reportConfig.targetConstantField = "target_max";
-        reportConfig.targetKpiField = "target_max_kpi";
-        reportConfig.options = options;
+ReportService.prototype.processTargetMax = function(options) {
+    let reportConfig = {};
 
-        self.processTargetConsolidation(reportConfig, callback);
-    }
+    reportConfig.targetTypeField = "target_max_type";
+    reportConfig.targetConstantField = "target_max";
+    reportConfig.targetKpiField = "target_max_kpi";
+    reportConfig.options = options;
 
-    processTarget(options, callback) {
-        var reportConfig = {};
+    return self.processTargetConsolidation(reportConfig);
+};
 
-        reportConfig.targetTypeField = "target_type";
-        reportConfig.targetConstantField = "target";
-        reportConfig.targetKpiField = "target_kpi";
-        reportConfig.options = options;
+ReportService.prototype.processTarget = function(options) {
+    let reportConfig = {};
 
-        self.processTargetConsolidation(reportConfig, callback);
-    }
+    reportConfig.targetTypeField = "target_type";
+    reportConfig.targetConstantField = "target";
+    reportConfig.targetKpiField = "target_kpi";
+    reportConfig.options = options;
 
-    processTargetConsolidation(reportConfig, callback) {
-        var options = reportConfig.options;
+    return self.processTargetConsolidation(reportConfig);
+};
 
-        var targetType = options.kpi[reportConfig.targetTypeField];
-        var targetConstant = options.kpi[reportConfig.targetConstantField];
-        var targetKpi = options.kpi[reportConfig.targetKpiField];
+ReportService.prototype.processTargetConsolidation = function(reportConfig) {
+    let options = reportConfig.options;
 
-        // console.log("targetType " + targetType);
-        // console.log("targetConstant " + targetConstant);
-        // console.log("targetKpi " + targetKpi);
+    let targetType = options.kpi[reportConfig.targetTypeField];
+    let targetConstant = options.kpi[reportConfig.targetConstantField];
+    let targetKpi = options.kpi[reportConfig.targetKpiField];
 
-        if (!targetType) {
-            callback(null);
-            return;
+
+    // console.log("targetType " + targetType);
+    // console.log("targetConstant " + targetConstant);
+    // console.log("targetKpi " + targetKpi);
+
+    if (!targetType)
+        throw new Error(ReportService.ERROR_INVALID_TARGET_TYPE);
+
+    if (targetType == utils.TARGET_TYPES.CONSTANT) {
+        // generate constant values given kpi's consolidation
+        var periods = utils.getDateRange(options.start, options.end, options.kpi.frequency);
+        for (let period of periods) {
+            period.value = targetConstant;
         }
 
-        if (targetType == utils.TARGET_TYPES.CONSTANT) {
-            // generate constant values given kpi's consolidation
-            var periods = utils.getDateRange(options.start, options.end, options.kpi.frequency);
-            periods.forEach(function(period) {
-                period.value = targetConstant;
-            });
-
-            if (options.kpi.frequency == utils.FREQUENCY_TYPES.NONE) {
-                callback(self.consolidateService.consolidateMultiple(periods, options.start, options.end, options.frequency, options.kpi.consolidationType));
-                return;
-            }
-
-            if (options.frequency > options.kpi.frequency) {
-                callback(null);
-                return;
-            }
-
-            var consolidatedTarget = self.consolidateService.consolidateMultiple(periods, options.start, options.end, options.kpi.frequency, options.kpi.consolidationType);
-
-            if (options.frequency == options.kpi.frequency)
-                callback(consolidatedTarget);
-            else
-                callback(self.consolidateService.consolidateMultiple(consolidatedTarget, options.start, options.end, options.frequency, options.kpi.consolidationType));
-
-        } else if (targetType == utils.TARGET_TYPES.KPI) {
-            this.processKpiValues({
-                start: options.start,
-                end: options.end,
-                frequency: options.frequency,
-                kpi: targetKpi
-            }, callback);
-        } else if (targetType == utils.TARGET_MARGIN_TYPES.PERCENTAGE) {
-            if (!options.target) {
-                callback(null);
-                return;
-            }
-            var resultValues = [];
-            for (var key in options.target) {
-                var targetValue = Object.assign({}, options.target[key]); // makes a copy
-                targetValue.value *= targetConstant;
-                resultValues.push(targetValue);
-            }
-
-            callback(resultValues);
-        } else {
-            callback(null);
+        if (options.kpi.frequency == utils.FREQUENCY_TYPES.NONE) {
+            return self.consolidateService.consolidateMultiple(periods, options.start, options.end, options.frequency, options.kpi.consolidationType);
         }
+
+        if (options.frequency > options.kpi.frequency) {
+            throw new Error(ReportService.ERROR_INVALID_FREQUENCY_TYPE);
+        }
+
+        var consolidatedTarget = self.consolidateService.consolidateMultiple(periods, options.start, options.end, options.kpi.frequency, options.kpi.consolidationType);
+
+        if (options.frequency == options.kpi.frequency)
+            return Promise.resolve(consolidatedTarget);
+
+        return Promise.resolve(self.consolidateService.consolidateMultiple(consolidatedTarget, options.start, options.end, options.frequency, options.kpi.consolidationType));
+
+    } else if (targetType == utils.TARGET_TYPES.KPI) {
+        return this.processKpiValues({
+            start: options.start,
+            end: options.end,
+            frequency: options.frequency,
+            kpi: targetKpi
+        });
+    } else if (targetType == utils.TARGET_MARGIN_TYPES.PERCENTAGE) {
+        if (!options.target)
+            throw new Error(ReportService.ERROR_INVALID_TARGET_TYPE);
+
+        let resultValues = [];
+        for (let target of options.target) {
+            let targetValue = Object.assign({}, target); // makes a copy
+            targetValue.value *= targetConstant;
+            resultValues.push(targetValue);
+        }
+
+        return Promise.resolve(resultValues);
     }
 
-    /**
-     * Returns consolidated KPI report
-     * @param {kpi: KPI, kpiName: String, start: Date, end: Date, frequency: utils.FREQUENCY_TYPES} options
-     */
-    processKpiValues(options, callback) {
-        if (!this.parseOptions(options)) {
-            callback(null);
-            return;
-        }
+    throw new Error(ReportService.ERROR_INVALID_TARGET_TYPE);
+};
 
-        var processReport = function(values) {
-            var periodReport = self.consolidateService.consolidateMultiple(values, options.start, options.end, options.frequency, options.kpi.consolidationType);
+/**
+ * Returns consolidated KPI report
+ * @param {kpi: KPI, kpiName: String, start: Date, end: Date, frequency: utils.FREQUENCY_TYPES} options
+ */
+ReportService.prototype.processKpiValues = function(options) {
+    this.parseOptions(options);
 
-            callback(periodReport);
-        };
+    var processReport = function(values) {
+        return self.consolidateService.consolidateMultiple(values, options.start, options.end, options.frequency, options.kpi.consolidationType);
+    };
 
-        var generateReport = function() {
-            // if not specified, the default frequency is the kpi's frequency
-            // null can be a frequency type (FREQUENCY_TYPES.NONE) so we should
-            // exclude this option by checking the variable first
-            if (isNaN(options.frequency) || !utils.frequencyTypeEnum.containsValue(options.frequency))
-                options.frequency = options.kpi.frequency;
+    var generateReport = function() {
+        // if not specified, the default frequency is the kpi's frequency
+        // null can be a frequency type (FREQUENCY_TYPES.NONE) so we should
+        // exclude this option by checking the variable first
+        if (isNaN(options.frequency) || !utils.frequencyTypeEnum.containsValue(options.frequency))
+            options.frequency = options.kpi.frequency;
 
-            // the report frequency should be smaller than the kpi frequency
-            // i.e. it is not possible to generate a report for each minute
-            // once the KPI has a daily frequency
-            if (options.kpi.frequency !== utils.FREQUENCY_TYPES.NONE && options.frequency > options.kpi.frequency) {
-                callback(null);
-                return;
-            }
+        // the report frequency should be smaller than the kpi frequency
+        // i.e. it is not possible to generate a report for each minute
+        // once the KPI has a daily frequency
+        if (options.kpi.frequency !== utils.FREQUENCY_TYPES.NONE && options.frequency > options.kpi.frequency)
+            throw new Error(ReportService.ERROR_INVALID_FREQUENCY_TYPE);
 
-            self.consolidateService.getElementsInPeriod(options.kpi, options.start, options.end, processReport);
-        };
+        return self.consolidateService.getElementsInPeriod(options.kpi, options.start, options.end).then(processReport);
+    };
 
-        var loadKpi = function(returnKpi, errorMessage) {
-            if (!returnKpi || errorMessage) {
-                callback(null);
-            }
+    var loadKpi = function(returnKpi) {
+        if (!returnKpi)
+            throw new Error(ReportService.ERROR_INVALID_KPI);
 
-            options.kpi = returnKpi;
-            generateReport();
-        };
+        options.kpi = returnKpi;
+        return generateReport();
+    };
 
-        // passing a value through options.kpi has higher priority than by name
-        // if kpi model is passed, then it should not load it again
-        if (options.kpi instanceof KPIService) {
-            generateReport();
-        } else if (typeof options.kpi === 'string') {
-            this.kpiService.load(options.kpi, loadKpi);
-        } else if (typeof options.kpiName === 'string') {
-            this.kpiService.loadByName(options.kpiName, loadKpi);
-        }
+    // passing a value through options.kpi has higher priority than by name
+    // if kpi model is passed, then it should not load it again
+    if (options.kpi && options.kpi.id) {
+        return generateReport();
+    } else if (typeof options.kpi === 'string') {
+        return this.kpiService.load(options.kpi).then(loadKpi);
+    } else if (typeof options.kpiName === 'string') {
+        return this.kpiService.loadByName(options.kpiName).then(loadKpi);
+    } else {
+        throw new Error(ReportService.ERROR_INVALID_KPI);
     }
+};
 
-    parseOptions(options) {
-        // mandatory fields
-        if (!options || !(options.kpi || options.kpiName) || !options.start || !options.end) {
-            return false;
-        }
-
-        return true;
-    }
-}
+ReportService.prototype.parseOptions = function(options) {
+    // mandatory fields
+    if (!options || !(options.kpi || options.kpiName) || !options.start || !options.end)
+        throw new Error(ReportService.ERROR_INVALID_ARGUMENTS);
+};
 
 module.exports = ReportService;

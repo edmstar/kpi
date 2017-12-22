@@ -1,4 +1,4 @@
-:token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHBpcmUiOjE1MTAwODA1NDI2NTcsImxvZ2luIjoiIn0.d5V3WsR9m1vqIAmP4uhZTfKNYs8Z3f4l3HaWPiWtUa4
+:token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHBpcmUiOjE1MTM5NTYyNDE5NDcsImxvZ2luIjoiIn0.RYTdGGAdfz-d33H9pAQBNqDP6GEf3MI1edFnfbLVaPc
 :server = http://localhost:8080
 
 ### Load KPI
@@ -10,6 +10,36 @@ X-Access-Token: :token
 
 GET :server/kpi/1216b892-dfd3-451b-b89b-dbaf6b17d9d6
 X-Access-Token: :token
+
+### Generate Report for KPI 2
+
+POST :server/report/period
+Content-Type: application/json
+X-Access-Token: :token
+
+{
+   "kpi": "1216b892-dfd3-451b-b89b-dbaf6b17d9d6",
+   "start": "2017-10-15 00:00:00.000 +00:00",
+   "end": "2017-10-28 00:00:00.000 +00:00",
+   "frequency": 3
+}
+
+### Bulk insert values
+
+POST :server/kpi/values/
+Content-Type: application/json
+X-Access-Token: :token
+
+{
+    "kpi": "1216b892-dfd3-451b-b89b-dbaf6b17d9d6",
+    "values" : [{
+        "date": "2018-01-01 00:00:00.000 +00:00",
+        "value": 52
+    }, {
+        "date": "2018-01-02 00:00:00.000 +00:00",
+        "value": 52
+    }]
+}
 
 ### Load KPI 3
 
@@ -28,7 +58,7 @@ Content-Type: application/json
 X-Access-Token: :token
 
 {
-  "name": "KPIName1",
+  "name": "KPIName5",
   "consolidationType": "mean",
   "frequency": "day",
   "multipleConsolidationType": "sum",

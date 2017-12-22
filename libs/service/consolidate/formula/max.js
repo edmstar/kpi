@@ -1,25 +1,27 @@
-var IFormula = require('../iformulafunction.js');
+const IFormula = require('../iformulafunction.js');
 
-class FunctionMax extends IFormula {
-    static get name() { return "max"; }
-
-    constructor() {
-        super(2);
-    }
-
-    parse(values) {
-        super.parse(values);
-
-        var max = null;
-
-        for(var v in values) {
-            var value = values[v];
-            if (max === null || max <= value)
-                max = value;
-        }
-
-        return max;
-    }
+function FunctionMax() {
+    IFormula.call(this, 2);
 }
+
+IFormula.compose(FunctionMax);
+
+FunctionMax.functionName = "max";
+
+// Override functions
+
+FunctionMax.prototype.parse = function(values) {
+    IFormula.prototype.parse.call(this, values);
+
+    var max = null;
+
+    for (var v in values) {
+        var value = values[v];
+        if (max === null || max <= value)
+            max = value;
+    }
+
+    return max;
+};
 
 module.exports = FunctionMax;

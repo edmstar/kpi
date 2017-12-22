@@ -41,7 +41,7 @@ module.exports = function(sequelize) {
         as: 'kpiValues'
     });
 
-    KPI.prototype.getPeriod = function(start, end, callback) {
+    KPI.prototype.getPeriod = function(start, end) {
         if (!start || !end)
             throw new Error();
 
@@ -63,13 +63,8 @@ module.exports = function(sequelize) {
                 order: 'date',
                 required: false
             }]
-        }).catch().then(result => {
-            //console.log(result);
-            if (result)
-                callback(result[0].kpiValues);
-            else
-                callback([]);
-        });
+        }).catch().then(result => result ? result[0].kpiValues : null);
+
     };
 
     return KPI_VALUE;
