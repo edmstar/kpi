@@ -24,12 +24,30 @@ KPIController.prototype.applyRoutes = function() {
         }).then((data) => res.json(utils.success(data))).catch(next);
     });
 
+    this.app.get("/kpi/name/:name", bodyParser.json(), function(req, res, next) {
+        self.dataServiceKPI.loadByName({
+            name: req.params.name
+        }).then((data) => res.json(utils.success(data))).catch(next);
+    });
+
     this.app.post("/kpi", bodyParser.json(), function(req, res, next) {
         self.dataServiceKPI.create(req.body).then((data) => res.json(utils.success(data))).catch(next);
     });
 
+    this.app.delete("/kpi/:id", bodyParser.json(), function(req, res, next) {
+        self.dataServiceKPI.delete({
+            id: req.params.id
+        }).then((data) => res.json(utils.success(data))).catch(next);
+    });
+
     this.app.post("/kpi/value", bodyParser.json(), function(req, res, next) {
         self.dataServiceKPI.addValue(req.body).then((data) => res.json(utils.success(data))).catch(next);
+    });
+
+    this.app.get("/kpi/value/:id", bodyParser.json(), function(req, res, next) {
+        self.dataServiceKPI.loadValue({
+            id: req.params.id
+        }).then((data) => res.json(utils.success(data))).catch(next);
     });
 
     this.app.post("/kpi/values/", bodyParser.json(), function(req, res, next) {
@@ -38,17 +56,11 @@ KPIController.prototype.applyRoutes = function() {
 
     this.app.post("/kpi/values/csv", bodyParser.json(), function(req, res, next) {
         self.dataServiceKPI.addValuesCsv(req.body).then((data) => res.json(utils.success(data))).catch(next);
-   });
-
-    this.app.get("/kpi/value/:id", bodyParser.json(), function(req, res, next) {
-        self.dataServiceKPI.loadValue({
-            id: req.params.id
-        }).then((data) => res.json(utils.success(data))).catch(next);
     });
 
-    this.app.get("/kpi/name/:name", bodyParser.json(), function(req, res, next) {
-        self.dataServiceKPI.loadByName({
-            name: req.params.name
+    this.app.delete("/kpi/values/:id", bodyParser.json(), function(req, res, next) {
+        self.dataServiceKPI.deleteValue({
+            id: req.params.id
         }).then((data) => res.json(utils.success(data))).catch(next);
     });
 };

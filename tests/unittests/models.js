@@ -9,7 +9,7 @@ process.env.TZ = 'Etc/UTC';
 const sequelize = new Sequelize('kpi', 'admin', 'password', {
     host: 'localhost',
     dialect: 'sqlite',
-
+    operatorsAliases: Sequelize.Op,
     pool: {
         max: 5,
         min: 0,
@@ -39,7 +39,7 @@ function generateMockArray(results) {
 
 function populateKPI() {
     var KPI = require('../../models/kpi.js')(sequelize);
-    items = [];
+    let items = [];
 
     var frequencyTypes = [utils.FREQUENCY_TYPES.DAY];
     var consolidationTypes = [utils.CONSOLIDATION_TYPES.SUM, utils.CONSOLIDATION_TYPES.MEAN];

@@ -3,6 +3,8 @@ var Sequelize = require('sequelize');
 const sequelize = new Sequelize('kpi', 'admin', 'password', {
     host: 'localhost',
     dialect: 'sqlite',
+    operatorsAliases: Sequelize.Op,
+
     pool: {
       max: 5,
       min: 0,

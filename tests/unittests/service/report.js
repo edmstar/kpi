@@ -64,12 +64,12 @@ describe('ReportService', function() {
                     }
                 });
             })
-            .then((updateResult) => expect(updateResult).to.not.equal(null))
+            .then(updateResult => expect(updateResult).to.not.equal(null))
             .then(() => addKpi(kpiToAdd))
-            .then((model) => {
+            .then(model => {
                 kpiModel = model;
                 return addValues(kpiModel);
-            }).then((kpiValuesModel) => {
+            }).then(kpiValuesModel => {
                 return getReport(kpiModel);//.then((report) => console.log(report));
             });
     });

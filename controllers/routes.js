@@ -10,21 +10,19 @@ RoutesController.prototype.addController = function(controller) {
 };
 
 RoutesController.prototype.applyMiddlewares = function() {
-    for (var cItem in this.routesList) {
-        var controllerType = this.routesList[cItem];
+    this.routesList.forEach((controllerType) => {
         var controller = new controllerType(this.app);
 
         controller.applyMiddlewares();
-    }
+    });
 };
 
 RoutesController.prototype.applyRoutes = function() {
-    for (var cItem in this.routesList) {
-        var controllerType = this.routesList[cItem];
+    this.routesList.forEach((controllerType) => {
         var controller = new controllerType(this.app);
 
         controller.applyRoutes();
-    }
+    });
 };
 
 RoutesController.prototype.apply = function() {
@@ -34,6 +32,7 @@ RoutesController.prototype.apply = function() {
     // Error middleware - only caught if .catch(next) applied
     this.app.use(function(err, req, res, next) {
         console.log(err);
+        res.status(400);
         res.json(utils.error(err.toString()));
     });
 };

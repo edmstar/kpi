@@ -31,7 +31,6 @@ describe('ConsolidateService', function() {
                 weight: 3.0
             },
         ];
-
         expect(consolidate.consolidateValues(data, utils.CONSOLIDATION_TYPES.SUM)).to.equal(6.0);
 
         expect(consolidate.consolidateValues(data, utils.CONSOLIDATION_TYPES.MEAN)).to.equal(2.0);
@@ -124,9 +123,6 @@ function evaluateKpiConsolidation(name, value, done) {
         where: {
             name: name
         }
-    }).catch(() => {
-        expect.fail(0, 1, "KPI not found");
-        done();
     }).then(values => {
         expect(values).to.have.length(1);
         kpi = values[0];

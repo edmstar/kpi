@@ -31,9 +31,9 @@ ReportService.prototype.getKpiReport = function(options) {
             options.target = result;
 
             return Promise.all([
-                self.processTargetMin(options), // process min
-                self.processTargetMax(options)  // process max
-            ]).then((targets) => {
+                self.processTargetMin, // process min
+                self.processTargetMax  // process max
+            ].map(async func => func(options))).then((targets) => {
                 kpiReport.targetMin = targets[0], //
                 kpiReport.targetMax = targets[1],
                 kpiReport.results = reportResults;
@@ -48,34 +48,34 @@ ReportService.prototype.getKpiReport = function(options) {
 };
 
 ReportService.prototype.processTargetMin = function(options) {
-    let reportConfig = {};
-
-    reportConfig.targetTypeField = "target_min_type";
-    reportConfig.targetConstantField = "target_min";
-    reportConfig.targetKpiField = "target_min_kpi";
-    reportConfig.options = options;
+    let reportConfig = {
+        targetTypeField: "target_min_type",
+        targetConstantField: "target_min",
+        targetKpiField: "target_min_kpi",
+        options: options
+    };
 
     return self.processTargetConsolidation(reportConfig);
 };
 
 ReportService.prototype.processTargetMax = function(options) {
-    let reportConfig = {};
-
-    reportConfig.targetTypeField = "target_max_type";
-    reportConfig.targetConstantField = "target_max";
-    reportConfig.targetKpiField = "target_max_kpi";
-    reportConfig.options = options;
+    let reportConfig = {
+        targetTypeField: "target_max_type",
+        targetConstantField: "target_max",
+        targetKpiField: "target_max_kpi",
+        options: options
+    };
 
     return self.processTargetConsolidation(reportConfig);
 };
 
 ReportService.prototype.processTarget = function(options) {
-    let reportConfig = {};
-
-    reportConfig.targetTypeField = "target_type";
-    reportConfig.targetConstantField = "target";
-    reportConfig.targetKpiField = "target_kpi";
-    reportConfig.options = options;
+    let reportConfig = {
+        targetTypeField: "target_type",
+        targetConstantField: "target",
+        targetKpiField: "target_kpi",
+        options: options
+    };
 
     return self.processTargetConsolidation(reportConfig);
 };
@@ -86,7 +86,6 @@ ReportService.prototype.processTargetConsolidation = function(reportConfig) {
     let targetType = options.kpi[reportConfig.targetTypeField];
     let targetConstant = options.kpi[reportConfig.targetConstantField];
     let targetKpi = options.kpi[reportConfig.targetKpiField];
-
 
     // console.log("targetType " + targetType);
     // console.log("targetConstant " + targetConstant);

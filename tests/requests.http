@@ -1,4 +1,4 @@
-:token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHBpcmUiOjE1MTM5NTYyNDE5NDcsImxvZ2luIjoiIn0.RYTdGGAdfz-d33H9pAQBNqDP6GEf3MI1edFnfbLVaPc
+:token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHBpcmUiOjE1MTU5NjAzODg5NDcsImxvZ2luIjoiIn0.hWKOyZxbBN-hq87dEctow3a2yeF3oEzACTFmhk_ephA
 :server = http://localhost:8080
 
 ### Load KPI
@@ -58,7 +58,7 @@ Content-Type: application/json
 X-Access-Token: :token
 
 {
-  "name": "KPIName5",
+  "name": "KPI10",
   "consolidationType": "mean",
   "frequency": "day",
   "multipleConsolidationType": "sum",
@@ -81,6 +81,17 @@ X-Access-Token: :token
   "weight": "1.0",
   "kpi": "1216b892-dfd3-451b-b89b-dbaf6b17d9d6"
 }
+
+### Load KPI by name
+GET :server/kpi/name/KPI10
+Content-Type: application/json
+X-Access-Token: :token
+
+
+### Delete KPI10
+DELETE :server/kpi/8b6d5968-d017-43f0-9d42-223b0e590a30
+Content-Type: application/json
+X-Access-Token: :token
 
 ### Login
 

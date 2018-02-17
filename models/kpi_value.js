@@ -63,7 +63,7 @@ module.exports = function(sequelize) {
                 order: 'date',
                 required: false
             }]
-        }).catch().then(result => result ? result[0].kpiValues : null);
+        }).then(result => result ? result[0].kpiValues : null);
 
     };
 

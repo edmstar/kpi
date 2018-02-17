@@ -1,36 +1,49 @@
 {
-  "name": "kpi",
-  "version": "1.0.0",
-  "description": "KPI Service",
-  "main": "app.js",
-  "directories": {
-    "test": "tests"
-  },
-  "scripts": {
-    "test": "mocha tests/unittests/service/*.js --slow 0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/eduardostarling/kpi.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "argparse": "^1.0.9",
-    "body-parser": "^1.18.2",
-    "chai-datetime": "^1.5.0",
-    "chai-uuid": "^1.0.6",
-    "cookie-parser": "^1.4.3",
-    "express": "^4.16.2",
-    "jwt-simple": "^0.5.1",
-    "multer": "^1.3.0",
-    "object-mapper": "^4.2.0",
-    "sequelize": "^4.20.3",
-    "sqlite3": "^3.1.13",
-    "uuid": "^3.1.0"
-  },
-  "devDependencies": {
-    "chai": "^4.1.2",
-    "mocha": "^4.0.1"
-  }
+    "name": "kpi",
+    "version": "1.0.0",
+    "description": "KPI Service",
+    "main": "app.js",
+    "directories": {
+        "test": "tests"
+    },
+    "scripts": {
+        "test": "mocha --reporter mochawesome --ui bdd tests/unittests/service/*.js --slow 0",
+        "coverage": "nyc --all --reporter=html --reporter=text mocha tests/unittests/service/*.js --slow 0"
+    },
+    "nyc": {
+        "exclude": [
+            "app.js",
+            "build",
+            "coverage"
+        ]
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/eduardostarling/kpi.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "argparse": "^1.0.9",
+        "body-parser": "^1.18.2",
+        "cookie-parser": "^1.4.3",
+        "express": "^4.16.2",
+        "jwt-simple": "^0.5.1",
+        "multer": "^1.3.0",
+        "object-mapper": "^4.2.1",
+        "sequelize": "^4.32.2",
+        "sqlite3": "^3.1.13",
+        "uuid": "^3.2.1"
+    },
+    "devDependencies": {
+        "chai": "^4.1.2",
+        "chai-as-promised": "^7.1.1",
+        "chai-datetime": "^1.5.0",
+        "chai-uuid": "^1.0.6",
+        "jest-runner-mocha": "^0.4.0",
+        "mocha": "^4.1.0",
+        "mocha-bdd-steps": "0.0.3",
+        "mochawesome": "^3.0.2",
+        "nyc": "^11.4.1"
+    }
 }
