@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="0.34500000000000003" tests="21" failures="0">
+  <testsuite name="Root Suite" timestamp="2018-04-07T11:04:45" tests="0" failures="0" time="0">
+  </testsuite>
+  <testsuite name="ConsolidateService" timestamp="2018-04-07T11:04:45" tests="4" file="/home/eduardo/github/kpi/tests/unittests/service/consolidate.js" failures="0" time="0.047">
+    <testcase name="ConsolidateService consolidateValues(values, consolidation) should return the consolidated value based on consolidation type provided" time="0.002" classname="consolidateValues(values, consolidation) should return the consolidated value based on consolidation type provided">
+    </testcase>
+    <testcase name="ConsolidateService mergeDateValues(empty, data) should return 5 dates with values and 2 dates without values ordered by date ascending" time="0.002" classname="mergeDateValues(empty, data) should return 5 dates with values and 2 dates without values ordered by date ascending">
+    </testcase>
+    <testcase name="ConsolidateService consolidate(kpi, start, end) should return 100 for KPI with {frequency=day, consolidation=sum, multipleConsolidation=sum}" time="0.027" classname="consolidate(kpi, start, end) should return 100 for KPI with {frequency=day, consolidation=sum, multipleConsolidation=sum}">
+    </testcase>
+    <testcase name="ConsolidateService consolidate(kpi, start, end) should return 10 for KPI with {frequency=day, consolidation=mean, multipleConsolidation=sum}" time="0.016" classname="consolidate(kpi, start, end) should return 10 for KPI with {frequency=day, consolidation=mean, multipleConsolidation=sum}">
+    </testcase>
+  </testsuite>
+  <testsuite name="Formula" timestamp="2018-04-07T11:04:45" tests="8" file="/home/eduardo/github/kpi/tests/unittests/service/formula.js" failures="0" time="0.004">
+    <testcase name="Formula Formula 2*(1+2+(3-4*(1+1)))+4 should return correct postfix output and resulting value should be 0" time="0.002" classname="Formula 2*(1+2+(3-4*(1+1)))+4 should return correct postfix output and resulting value should be 0">
+    </testcase>
+    <testcase name="Formula Formula -(-5)+1*(-1+5*(1^12))+2+3+1%2 should return correct postfix output and resulting value should be 15" time="0" classname="Formula -(-5)+1*(-1+5*(1^12))+2+3+1%2 should return correct postfix output and resulting value should be 15">
+    </testcase>
+    <testcase name="Formula Formula 1+2^(+1.5*2+2) should return correct postfix output and resulting value should be 33" time="0" classname="Formula 1+2^(+1.5*2+2) should return correct postfix output and resulting value should be 33">
+    </testcase>
+    <testcase name="Formula Formula 10/-1*-2 should return correct postfix output and resulting value should be 20" time="0" classname="Formula 10/-1*-2 should return correct postfix output and resulting value should be 20">
+    </testcase>
+    <testcase name="Formula Formula 1+MAX(25,2) should return correct postfix output, parse function MAX and return result 26" time="0.001" classname="Formula 1+MAX(25,2) should return correct postfix output, parse function MAX and return result 26">
+    </testcase>
+    <testcase name="Formula Formula 1+MAX(-(25-3*5),5*MAX(2,&quot;element2&quot;)^7)%2 should return correct postfix output" time="0" classname="Formula 1+MAX(-(25-3*5),5*MAX(2,&quot;element2&quot;)^7)%2 should return correct postfix output">
+    </testcase>
+    <testcase name="Formula Parsing empty formula should fail" time="0" classname="Parsing empty formula should fail">
+    </testcase>
+    <testcase name="Formula Parsing formula 1&amp;2 should fail" time="0.001" classname="Parsing formula 1&amp;2 should fail">
+    </testcase>
+  </testsuite>
+  <testsuite name="KPIService" timestamp="2018-04-07T11:04:45" tests="8" file="/home/eduardo/github/kpi/tests/unittests/service/kpi.js" failures="0" time="0.10700000000000001">
+    <testcase name="KPIService Add new KPI to database with no targets." time="0.016" classname="Add new KPI to database with no targets.">
+    </testcase>
+    <testcase name="KPIService Add new KPI with existing name." time="0.005" classname="Add new KPI with existing name.">
+    </testcase>
+    <testcase name="KPIService Add new KPIValue" time="0.017" classname="Add new KPIValue">
+    </testcase>
+    <testcase name="KPIService Remove KPIValue" time="0.023" classname="Remove KPIValue">
+    </testcase>
+    <testcase name="KPIService Remove KPI" time="0.023" classname="Remove KPI">
+    </testcase>
+    <testcase name="KPIService Load the first KPI mocked in the database" time="0.001" classname="Load the first KPI mocked in the database">
+    </testcase>
+    <testcase name="KPIService Load the first KPI Value mocked in the database" time="0" classname="Load the first KPI Value mocked in the database">
+    </testcase>
+    <testcase name="KPIService Load a range of KPI values given by a certain range that is contained by the all the KPI values in the database" time="0.022" classname="Load a range of KPI values given by a certain range that is contained by the all the KPI values in the database">
+    </testcase>
+  </testsuite>
+  <testsuite name="ReportService" timestamp="2018-04-07T11:04:46" tests="1" file="/home/eduardo/github/kpi/tests/unittests/service/report.js" failures="0" time="0.187">
+    <testcase name="ReportService Generate simple KPI report with KPI target and percentage margins" time="0.187" classname="Generate simple KPI report with KPI target and percentage margins">
+    </testcase>
+  </testsuite>
+</testsuites>
