@@ -8,6 +8,7 @@
     },
     "scripts": {
         "test": "mocha --reporter mochawesome --ui bdd tests/unittests/service/*.js --slow 0",
+        "test-pipeline": "mocha --reporter mocha-junit-reporter --ui bdd tests/unittests/service/*.js --slow 0",
         "coverage": "nyc --all --reporter=html --reporter=text mocha tests/unittests/service/*.js --slow 0"
     },
     "nyc": {
@@ -43,6 +44,7 @@
         "jest-runner-mocha": "^0.4.0",
         "mocha": "^4.1.0",
         "mocha-bdd-steps": "0.0.3",
+        "mocha-junit-reporter": "^1.17.0",
         "mochawesome": "^3.0.2",
         "nyc": "^11.4.1"
     }

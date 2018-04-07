@@ -3,24 +3,15 @@ pipeline {
   stages {
     stage('Build') {
       steps {
-        //sh 'echo y | docker system prune'
-        script {
-          def sout = new StringBuilder(), serr = new StringBuilder()
-          def proc = 'docker ps -a -q --filter name=kpi-build'.execute()
-          proc.consumeProcessOutput(sout, serr)
-          proc.waitFor()
-
-          if (!sout?.allWhiteSpace) {
-            'docker kill kpi-build'.execute().waitFor()
-          }
-        }
-        sh 'docker run -d --name kpi-build -it -v $PWD:/code'
-        sh 'docker exec kpi-build npm install /code/package.json'
+        sh 'docker stop kpi-build || true && docker rm kpi-build'
+        sh 'docker run -d --name kpi-build -it -v ${PWD}:/code node:latest bash'
+        sh 'docker exec -w /code kpi-build npm install'
       }
     }
     stage('Test') {
       steps {
-        sh 'docker exec kpi-build npm test'
+        sh 'docker exec -w /code kpi-build npm run test-pipeline'
+        junit '${PWD}/test-results.xml'
       }
     }
   }
